@@ -67,4 +67,9 @@ public class Province {
     public void setRegions(Set<Region> regions) {
         this.regions = regions;
     }
+
+    public Province orElse(Object object) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'orElse'");
+    }
 }

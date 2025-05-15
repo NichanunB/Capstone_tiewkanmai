@@ -10,7 +10,6 @@ import com.tiewkanmai.security.jwt.JwtUtils;
 import com.tiewkanmai.security.services.UserDetailsImpl;
 
 import jakarta.validation.Valid;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -19,24 +18,26 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 public class AuthService {
 
     @Autowired
-    AuthenticationManager authenticationManager;
+    private AuthenticationManager authenticationManager;
 
     @Autowired
-    UserRepository userRepository;
+    private UserRepository userRepository;
 
     @Autowired
-    PasswordEncoder encoder;
+    private PasswordEncoder encoder;
 
     @Autowired
-    JwtUtils jwtUtils;
+    private JwtUtils jwtUtils;
 
+    /**
+     * ตรวจสอบความถูกต้องของผู้ใช้ และสร้าง JWT Token
+     */
     public JwtResponse authenticateUser(@Valid LoginRequest loginRequest) {
         Authentication authentication = authenticationManager.authenticate(
             new UsernamePasswordAuthenticationToken(
@@ -45,29 +46,33 @@ public class AuthService {
             )
         );
 
-        // ✅ สำคัญมาก: เซ็ต Authentication context
+        // เซ็ต authentication context ให้ระบบรู้ว่าใครกำลังล็อกอินอยู่
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
+        // ดึง user detail ที่ล็อกอินสำเร็จ
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+
+        // สร้าง JWT token
         String jwt = jwtUtils.generateJwtToken(authentication);
 
-        List<String> roles = userDetails.getAuthorities().stream()
-            .map(item -> item.getAuthority())
-            .collect(Collectors.toList());
-
-        return new JwtResponse(jwt,
+        return new JwtResponse(
+            jwt,
             userDetails.getId(),
             userDetails.getFirstName(),
             userDetails.getLastName(),
-            userDetails.getEmail());
+            userDetails.getEmail()
+        );
     }
 
+    /**
+     * ลงทะเบียนผู้ใช้ใหม่
+     */
     public MessageResponse registerUser(@Valid RegisterRequest signUpRequest) {
         if (userRepository.existsByEmail(signUpRequest.getEmail())) {
-            return new MessageResponse("Error: Email is already in use!");
+            return new MessageResponse("Error: Email นี้ถูกใช้งานแล้ว!");
         }
 
-        // Create new user account
+        // สร้างบัญชีใหม่
         User user = new User(
             signUpRequest.getFirstName(),
             signUpRequest.getLastName(),
@@ -77,6 +82,6 @@ public class AuthService {
 
         userRepository.save(user);
 
-        return new MessageResponse("User registered successfully!");
+        return new MessageResponse("สมัครสมาชิกสำเร็จ!");
     }
 }

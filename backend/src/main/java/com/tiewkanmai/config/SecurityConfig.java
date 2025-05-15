@@ -81,15 +81,12 @@ public class SecurityConfig {
             .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // เปิดให้ทุกคนเข้าถึง register/login ได้
+                .requestMatchers("/api/dev/**").permitAll()       // ✅ ปลดล็อก dev API
                 .requestMatchers("/api/auth/**").permitAll()
-                // เปิดให้ error path ไม่ต้องล็อกอิน
                 .requestMatchers("/error").permitAll()
-                // ถ้ามี public endpoint อื่นๆ ก็เพิ่มที่นี่ได้
                 .anyRequest().authenticated()
             );
 
-        // ใส่ JWT filter ก่อน UsernamePasswordAuthenticationFilter
         http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

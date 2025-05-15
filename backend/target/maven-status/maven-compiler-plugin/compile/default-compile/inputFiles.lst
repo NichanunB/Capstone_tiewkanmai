@@ -12,6 +12,7 @@
 /Users/nichanun/Desktop/capstone/backend/src/main/java/com/tiewkanmai/model/Region.java
 /Users/nichanun/Desktop/capstone/backend/src/main/java/com/tiewkanmai/model/Rate.java
 /Users/nichanun/Desktop/capstone/backend/src/main/java/com/tiewkanmai/model/User.java
+/Users/nichanun/Desktop/capstone/backend/src/main/java/com/tiewkanmai/controller/DevController.java
 /Users/nichanun/Desktop/capstone/backend/src/main/java/com/tiewkanmai/repository/FavRepository.java
 /Users/nichanun/Desktop/capstone/backend/src/main/java/com/tiewkanmai/model/Fav.java
 /Users/nichanun/Desktop/capstone/backend/src/main/java/com/tiewkanmai/security/services/UserDetailsImpl.java
@@ -19,12 +20,13 @@
 /Users/nichanun/Desktop/capstone/backend/src/main/java/com/tiewkanmai/model/Place.java
 /Users/nichanun/Desktop/capstone/backend/src/main/java/com/tiewkanmai/service/AuthService.java
 /Users/nichanun/Desktop/capstone/backend/src/main/java/com/tiewkanmai/dto/response/TravelRecommendationResponse.java
-/Users/nichanun/Desktop/capstone/backend/src/main/java/com/tiewkanmai/config/WebConfig.java
 /Users/nichanun/Desktop/capstone/backend/src/main/java/com/tiewkanmai/repository/BudgetRepository.java
 /Users/nichanun/Desktop/capstone/backend/src/main/java/com/tiewkanmai/service/AIPlaceRecommendationService.java
 /Users/nichanun/Desktop/capstone/backend/src/main/java/com/tiewkanmai/TiewkanmaiApplication.java
 /Users/nichanun/Desktop/capstone/backend/src/main/java/com/tiewkanmai/security/jwt/AuthTokenFilter.java
 /Users/nichanun/Desktop/capstone/backend/src/main/java/com/tiewkanmai/model/Province.java
+/Users/nichanun/Desktop/capstone/backend/src/main/java/com/tiewkanmai/dto/response/UserProfileResponse.java
+/Users/nichanun/Desktop/capstone/backend/src/main/java/com/tiewkanmai/service/AttractionImporterService.java
 /Users/nichanun/Desktop/capstone/backend/src/main/java/com/tiewkanmai/model/Budget.java
 /Users/nichanun/Desktop/capstone/backend/src/main/java/com/tiewkanmai/config/AppConfig.java
 /Users/nichanun/Desktop/capstone/backend/src/main/java/com/tiewkanmai/dto/request/TravelPreferenceRequest.java

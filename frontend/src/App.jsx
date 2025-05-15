@@ -1,17 +1,17 @@
 // src/App.jsx
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import './App.css'
-import Home from './pages/Home'
-import SignIn from './pages/SignIn'
-import SignUp from './pages/SignUp'
-import ResetPassword from './pages/ResetPassword'
-import SearchResultPage from './pages/SearchResultPage'
-import SharedTravelPlanPage from './pages/SharedTravelPlanPage'
-import PlaceDetailPage from './pages/PlaceDetailPage'
-import TravelPlan from './components/TravelPlan'
-import UserDashboard from './pages/UserDashboard'
-import CreatePlanPage from './pages/CreatePlanPage'
-import { AuthProvider } from './context/AuthContext'
+import './App.css';
+import Home from './pages/Home';
+import SignIn from './pages/SignIn';
+import SignUp from './pages/SignUp';
+import ResetPassword from './pages/ResetPassword';
+import SearchResultPage from './pages/SearchResultPage';
+import SharedTravelPlanPage from './pages/SharedTravelPlanPage';
+import PlaceDetailPage from './pages/PlaceDetailPage';
+import TravelPlan from './components/TravelPlan';
+import UserDashboard from './pages/UserDashboard';
+import CreatePlanPage from './pages/CreatePlanPage';
+import { AuthProvider } from './context/AuthContext';
 
 function App() {
   return (
@@ -34,4 +34,4 @@ function App() {
   );
 }
 
-export default App
+export default App;

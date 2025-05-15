@@ -50,4 +50,9 @@ public class Category {
     public void setPlaces(Set<Place> places) {
         this.places = places;
     }
+
+    public Category orElse(Object object) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'orElse'");
+    }
 }

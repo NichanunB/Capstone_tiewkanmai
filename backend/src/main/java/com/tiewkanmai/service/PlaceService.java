@@ -1,19 +1,23 @@
 package com.tiewkanmai.service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import com.tiewkanmai.dto.response.PlaceResponse;
+import com.tiewkanmai.model.Category;
 import com.tiewkanmai.model.Place;
 import com.tiewkanmai.model.Province;
 import com.tiewkanmai.repository.CategoryRepository;
 import com.tiewkanmai.repository.PlaceRepository;
 import com.tiewkanmai.repository.ProvinceRepository;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+import java.math.BigDecimal;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class PlaceService {
@@ -26,148 +30,71 @@ public class PlaceService {
 
     @Autowired
     private ProvinceRepository provinceRepository;
-    
+
     @Autowired
     private AIPlaceRecommendationService aiRecommendationService;
 
-    /**
-     * Get all places
-     * 
-     * @return List of PlaceResponse
-     */
+    @Autowired
+    private RestTemplate restTemplate;
+
+    @Value("${longdo.map.api.key}")
+    private String longdoApiKey;
+
     public List<PlaceResponse> getAllPlaces() {
-        List<Place> places = placeRepository.findAll();
-        return convertToPlaceResponseList(places);
+        return convertToPlaceResponseList(placeRepository.findAll());
     }
 
-    /**
-     * Get place by ID
-     * 
-     * @param id Place ID
-     * @return PlaceResponse
-     */
     public PlaceResponse getPlaceById(Long id) {
-        Optional<Place> place = placeRepository.findById(id);
-        if (!place.isPresent()) {
-            return null;
-        }
-        return convertToPlaceResponse(place.get());
+        return placeRepository.findById(id)
+                .map(this::convertToPlaceResponse)
+                .orElse(null);
     }
 
-    /**
-     * Get places by province ID
-     * 
-     * @param provinceId Province ID
-     * @return List of PlaceResponse
-     */
     public List<PlaceResponse> getPlacesByProvinceId(Long provinceId) {
-        List<Place> places = placeRepository.findAllByProvinceId(provinceId);
-        return convertToPlaceResponseList(places);
+        return convertToPlaceResponseList(placeRepository.findAllByProvinceId(provinceId));
     }
 
-    /**
-     * Get places by category ID
-     * 
-     * @param categoryId Category ID
-     * @return List of PlaceResponse
-     */
     public List<PlaceResponse> getPlacesByCategoryId(Long categoryId) {
-        List<Place> places = placeRepository.findAllByCategoryId(categoryId);
-        return convertToPlaceResponseList(places);
+        return convertToPlaceResponseList(placeRepository.findAllByCategoryId(categoryId));
     }
 
-    /**
-     * Get places by province ID and category ID
-     * 
-     * @param provinceId Province ID
-     * @param categoryId Category ID
-     * @return List of PlaceResponse
-     */
     public List<PlaceResponse> getPlacesByProvinceIdAndCategoryId(Long provinceId, Long categoryId) {
-        List<Place> places = placeRepository.findAllByProvinceIdAndCategoryId(provinceId, categoryId);
-        return convertToPlaceResponseList(places);
+        return convertToPlaceResponseList(placeRepository.findAllByProvinceIdAndCategoryId(provinceId, categoryId));
     }
 
-    /**
-     * Create new place
-     * 
-     * @param place Place object
-     * @return Created Place
-     */
     public Place createPlace(Place place) {
         return placeRepository.save(place);
     }
 
-    /**
-     * Update existing place
-     * 
-     * @param id    Place ID
-     * @param place Updated Place object
-     * @return Updated Place
-     */
-    public Place updatePlace(Long id, Place place) {
-        Optional<Place> existingPlace = placeRepository.findById(id);
-        if (!existingPlace.isPresent()) {
-            return null;
-        }
-
-        place.setId(id);
-        return placeRepository.save(place);
+    public Place updatePlace(Long id, Place updatedPlace) {
+        if (!placeRepository.existsById(id)) return null;
+        updatedPlace.setId(id);
+        return placeRepository.save(updatedPlace);
     }
 
-    /**
-     * Delete place by ID
-     * 
-     * @param id Place ID
-     * @return true if deleted, false otherwise
-     */
     public boolean deletePlace(Long id) {
-        Optional<Place> place = placeRepository.findById(id);
-        if (!place.isPresent()) {
-            return false;
-        }
-
+        if (!placeRepository.existsById(id)) return false;
         placeRepository.deleteById(id);
         return true;
     }
-    
-    /**
-     * แนะนำสถานที่ที่เกี่ยวข้องกับสถานที่ที่กำลังดู โดยใช้ AI
-     * 
-     * @param placeId รหัสสถานที่ที่กำลังดู
-     * @return List<PlaceResponse> รายการสถานที่ที่เกี่ยวข้อง
-     */
+
     public List<PlaceResponse> getRelatedPlaces(Long placeId) {
-        // ใช้ AI Service เพื่อแนะนำสถานที่
-        List<Place> relatedPlaces = aiRecommendationService.getRelatedPlaces(placeId);
-        return convertToPlaceResponseList(relatedPlaces);
+        return convertToPlaceResponseList(aiRecommendationService.getRelatedPlaces(placeId));
     }
 
-    /**
-     * แนะนำสถานที่ใกล้เคียงตามพิกัด
-     * 
-     * @param latitude พิกัดละติจูด
-     * @param longitude พิกัดลองจิจูด
-     * @param radius รัศมีในกิโลเมตร
-     * @return List<PlaceResponse> รายการสถานที่ใกล้เคียง
-     */
     public List<PlaceResponse> getNearbyPlaces(Double latitude, Double longitude, Integer radius) {
-        List<Place> nearbyPlaces = placeRepository.findNearby(latitude, longitude, radius);
-        return convertToPlaceResponseList(nearbyPlaces);
+        return convertToPlaceResponseList(placeRepository.findNearby(latitude, longitude, radius));
     }
 
-    /**
-     * Convert Place to PlaceResponse
-     * 
-     * @param place Place object
-     * @return PlaceResponse
-     */
     private PlaceResponse convertToPlaceResponse(Place place) {
         PlaceResponse response = new PlaceResponse();
         response.setId(place.getId());
         response.setName(place.getName());
         response.setDescription(place.getDescription());
-        response.setImage(place.getImg());
+
+        // ✅ ดึงรูปจาก Longdo API สด
+        response.setImage(fetchImageFromLongdo(place.getName()));
+
         response.setRating(place.getRating());
         response.setCategory(place.getCategory() != null ? place.getCategory().getName() : null);
         response.setMap(place.getMap());
@@ -176,32 +103,44 @@ public class PlaceService {
         response.setLongitude(place.getLongitude());
         response.setAddress(place.getAddress());
 
-        // เพิ่มข้อมูลจังหวัด
-        if (place.getProvinces() != null && !place.getProvinces().isEmpty()) {
-            Province province = place.getProvinces().iterator().next();
-            response.setProvince(province.getName());
-        }
+        // จังหวัดแรก (ถ้ามี)
+        place.getProvinces().stream().findFirst().ifPresent(p -> response.setProvince(p.getName()));
 
-        // เพิ่มข้อมูลหมวดหมู่
-        // (ในตัวอย่างนี้สมมติว่าสถานที่มีหมวดหมู่เดียว ในความจริงอาจมีหลายหมวดหมู่)
-        List<String> categories = new ArrayList<>();
+        // หมวดหมู่
         if (place.getCategory() != null) {
-            categories.add(place.getCategory().getName());
+            response.setCategories(Collections.singletonList(place.getCategory().getName()));
+        } else {
+            response.setCategories(Collections.emptyList());
         }
-        response.setCategories(categories);
 
         return response;
     }
 
-    /**
-     * Convert List<Place> to List<PlaceResponse>
-     * 
-     * @param places List of Place objects
-     * @return List of PlaceResponse
-     */
     private List<PlaceResponse> convertToPlaceResponseList(List<Place> places) {
         return places.stream()
                 .map(this::convertToPlaceResponse)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * ดึงภาพจาก Longdo API โดยตรงด้วยชื่อสถานที่
+     */
+    private String fetchImageFromLongdo(String name) {
+        try {
+            String encodedName = URLEncoder.encode(name, StandardCharsets.UTF_8);
+            String url = "https://api.longdo.com/map/services?name=" + encodedName + "&key=" + longdoApiKey;
+
+            Map<String, Object> response = restTemplate.getForObject(url, Map.class);
+            if (response != null && response.containsKey("data")) {
+                List<Map<String, Object>> dataList = (List<Map<String, Object>>) response.get("data");
+                if (!dataList.isEmpty() && dataList.get(0).containsKey("pic")) {
+                    return (String) dataList.get(0).get("pic");
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("⚠️ Longdo API error for " + name + ": " + e.getMessage());
+        }
+
+        return "https://via.placeholder.com/400x300?text=No+Image";
     }
 }

@@ -1,83 +1,65 @@
-import React, { useEffect, useRef } from 'react';
-import PlaceHeader from './PlaceHeader';
+import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { placeService } from '../services/api';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
+import PlaceDetail from './PlaceDetail';
 
-const PlaceDetail = ({
-  title,
-  address,
-  rating,
-  tags,
-  description,
-  imageUrl,
-  latitude,
-  longitude
-}) => {
-  const mapContainerRef = useRef(null);
-  const mapRef = useRef(null);
+const PlaceDetailPage = () => {
+  const { id } = useParams(); // ดึง id จาก URL
+  const [place, setPlace] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // สร้างแผนที่เมื่อ component mount และมีพิกัด
   useEffect(() => {
-    // ถ้ามีพิกัดและ Longdo Map API โหลดแล้ว
-    if (latitude && longitude && mapContainerRef.current && window.longdo) {
-      // สร้างแผนที่
-      const map = new window.longdo.Map({
-        placeholder: mapContainerRef.current,
-        language: 'th',
-        zoom: 15,
-        location: { lon: longitude, lat: latitude }
-      });
-
-      // เพิ่มหมุดที่พิกัดนั้น
-      const marker = new window.longdo.Marker({ lon: longitude, lat: latitude });
-      map.Overlays.add(marker);
-
-      // เก็บไว้เพื่อทำความสะอาดเมื่อ component unmount
-      mapRef.current = map;
+    if (id) {
+      placeService
+        .getPlaceById(id)
+        .then((res) => {
+          setPlace(res.data);
+        })
+        .catch((err) => {
+          console.error('ไม่สามารถโหลดข้อมูลสถานที่:', err);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
     }
+  }, [id]);
 
-    // Cleanup เมื่อ component unmount
-    return () => {
-      if (mapRef.current) {
-        mapRef.current = null;
-      }
-    };
-  }, [latitude, longitude]);
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-gray-600">
+        กำลังโหลดข้อมูล...
+      </div>
+    );
+  }
+
+  if (!place) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-red-500">
+        ไม่พบข้อมูลสถานที่
+      </div>
+    );
+  }
 
   return (
-    <div className="mb-6">
-      <PlaceHeader
-        title={title}
-        address={address}
-        rating={rating}
-        tags={tags}
-      />
-      <div className="rounded overflow-hidden mb-4">
-        <img 
-          src={imageUrl || 'https://via.placeholder.com/800x400?text=No+Image+Available'} 
-          alt={title} 
-          className="w-full h-80 object-cover" 
-          onError={(e) => {
-            e.target.onerror = null;
-            e.target.src = 'https://via.placeholder.com/800x400?text=Image+Not+Found';
-          }}
+    <div className="bg-[#E7F9FF] min-h-screen">
+      <Navbar />
+      <div className="max-w-4xl mx-auto p-6">
+        <PlaceDetail
+          title={place.place_name}
+          address={place.address}
+          rating={place.rating}
+          tags={[place.category_name, place.sub_category]} // แปลงเป็น array
+          description={place.description}
+          imageUrl={place.img}
+          latitude={place.latitude}
+          longitude={place.longitude}
         />
       </div>
-      <p className="text-gray-700 text-sm leading-relaxed">{description}</p>
-      <div className="border-t border-gray-200 my-6"></div>
-      <h2 className="text-2xl font-bold mb-4">แผนที่</h2>
-      <div className="h-80 bg-gray-200 rounded overflow-hidden">
-        {latitude && longitude ? (
-          <div 
-            ref={mapContainerRef} 
-            style={{ width: '100%', height: '100%' }}
-          ></div>
-        ) : (
-          <div className="flex items-center justify-center h-full text-gray-500">
-            ไม่มีข้อมูลแผนที่
-          </div>
-        )}
-      </div>
+      <Footer />
     </div>
   );
 };
 
-export default PlaceDetail;
+export default PlaceDetailPage;
