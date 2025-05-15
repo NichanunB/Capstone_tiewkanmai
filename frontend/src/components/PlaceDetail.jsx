@@ -1,36 +1,35 @@
-import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import React from 'react';
+import PlaceHeader from './PlaceHeader';
 
-const PlaceDetail = () => {
-  const { id } = useParams();
-  const [place, setPlace] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchPlace = async () => {
-      try {
-        const res = await fetch(`/api/places/${id}`);
-        const data = await res.json();
-        setPlace(data);
-      } catch (err) {
-        console.error('Failed to fetch place:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPlace();
-  }, [id]);
-
-  if (loading) return <div className="p-4">Loading...</div>;
-  if (!place) return <div className="p-4">ไม่พบข้อมูลสถานที่</div>;
-
+const PlaceDetail = ({
+  title,
+  address,
+  rating,
+  tags,
+  description,
+  imageUrl
+}) => {
   return (
-    <div className="max-w-3xl mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-2">{place.name}</h1>
-      <img src={place.imageUrl || 'https://via.placeholder.com/600x400'} alt={place.name} className="rounded-lg mb-4" />
-      <p className="text-gray-700">{place.description}</p>
-      <p className="mt-2 text-sm text-gray-500">หมวดหมู่: {place.category || 'ไม่ระบุ'}</p>
+    <div className="mb-6">
+      <PlaceHeader
+        title={title}
+        address={address}
+        rating={rating}
+        tags={tags}
+      />
+      <div className="rounded overflow-hidden mb-4">
+        <img src={imageUrl} alt={title} className="w-full h-80 object-cover" />
+      </div>
+      <p className="text-gray-700 text-sm leading-relaxed">{description}</p>
+      <div className="border-t border-gray-200 my-6"></div>
+      <h2 className="text-2xl font-bold mb-4">แผนที่</h2>
+      <div className="h-80 bg-gray-200 rounded overflow-hidden">
+        <img 
+          src="/lovable-uploads/943f41cd-99dd-48e4-b008-79084143e614.png" 
+          alt="Map" 
+          className="w-full h-full object-cover opacity-50"
+        />
+      </div>
     </div>
   );
 };

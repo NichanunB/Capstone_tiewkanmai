@@ -1,6 +1,8 @@
 import React, { useState } from "react"
 import { Globe, ChevronDown } from "lucide-react"
 import TravelCard from "./TravelCard"
+import { Link } from 'react-router-dom'
+import Pagination from "./Pagination"
 
 const travelPlans = [
     {
@@ -80,6 +82,13 @@ const travelPlans = [
 
 function SharedTravelPlan() {
   const [showDropdown, setShowDropdown] = useState(false)
+  const [selectedSort, setSelectedSort] = useState("ล่าสุด")
+
+  const handleSortSelect = (sortOption) => {
+    setSelectedSort(sortOption)
+    setShowDropdown(false)
+    // Here you can add logic to sort the travel plans based on the selected option
+  }
 
   return (
     <div className="py-6">
@@ -90,26 +99,41 @@ function SharedTravelPlan() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <Globe className="h-8 w-8" />
-              <h1 className="text-2xl font-bold">Shared Travel Plans</h1>
+              <h1 className="text-2xl font-bold">แผนเที่ยวคนอื่น</h1>
             </div>
             <p className="text-gray-600 text-sm">
-              Explore travel plans created by other users and get inspired!
+              ดูแผนเที่ยวจากผู้ใช้งาน แล้วสร้างแรงบันดาลใจให้การเดินทางของคุณ!
             </p>
           </div>
           <div className="relative">
             <button
-              className="bg-[#3674B5] text-white px-4 py-2 rounded-lg flex items-center gap-2"
+              className="bg-[#3674B5] text-white px-4 py-2 rounded-lg flex items-center gap-2 cursor-pointer"
               onClick={() => setShowDropdown(!showDropdown)}
             >
-              <span>ล่าสุด</span>
+              <span>{selectedSort}</span>
               <ChevronDown className="h-4 w-4" />
             </button>
             {showDropdown && (
               <div className="absolute right-0 mt-1 bg-[#E7F9FF] rounded-lg shadow-md w-40 z-10">
                 <div className="p-2 text-sm">
-                  <div className="py-1 cursor-pointer hover:bg-blue-200 px-2 rounded-lg">ล่าสุด</div>
-                  <div className="py-1 cursor-pointer hover:bg-blue-200 px-2 rounded-lg">ยอดนิยม</div>
-                  <div className="py-1 cursor-pointer hover:bg-blue-200 px-2 rounded-lg">ถูกใจมากสุด</div>
+                  <div 
+                    className="py-1 cursor-pointer hover:bg-[#3674B5]/10 px-2 rounded-lg"
+                    onClick={() => handleSortSelect("ล่าสุด")}
+                  >
+                    ล่าสุด
+                  </div>
+                  <div 
+                    className="py-1 cursor-pointer hover:bg-[#3674B5]/10 px-2 rounded-lg"
+                    onClick={() => handleSortSelect("ยอดนิยม")}
+                  >
+                    ยอดนิยม
+                  </div>
+                  <div 
+                    className="py-1 cursor-pointer hover:bg-[#3674B5]/10 px-2 rounded-lg"
+                    onClick={() => handleSortSelect("ถูกใจมากสุด")}
+                  >
+                    ถูกใจมากสุด
+                  </div>
                 </div>
               </div>
             )}
@@ -119,9 +143,12 @@ function SharedTravelPlan() {
         {/* Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {travelPlans.map((plan) => (
-            <TravelCard key={plan.id} {...plan} />
+            <Link to={`/travel-plan/${plan.id}`} key={plan.id}>
+              <TravelCard {...plan} />
+            </Link>
           ))}
         </div>
+        <Pagination />
         </div>
       </div>
     </div>

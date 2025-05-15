@@ -19,7 +19,7 @@ const TravelCard = ({ image, title, author, locations, likes }) => {
           <p className="text-gray-700 text-sm">{locations.join(", ")}</p>
         </div>
         <div className="flex justify-between items-center">
-          <button className="text-sm font-medium">View plan</button>
+          <button className="text-sm font-medium">ดูแผนเที่ยว</button>
           <div className="flex items-center gap-1">
             <Heart className="h-4 w-4 text-red-500 fill-red-500" />
             <span className="text-sm">{likes}</span>

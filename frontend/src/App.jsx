@@ -1,25 +1,37 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import PlaceDetail from './components/PlaceDetail';
-import PlaceList from './components/PlaceList';
+import { useState } from 'react'
+import './App.css'
+import Home from './pages/Home'
+import SignIn from './pages/SignIn'
+import SignUp from './pages/SignUp'
+import ResetPassword from './pages/ResetPassword'
+import SearchResultPage from './pages/SearchResultPage'
+import SharedTravelPlanPage from './pages/SharedTravelPlanPage'
+import PlaceDetailPage from './pages/PlaceDetailPage'
+import TravelPlan from './components/TravelPlan'
+import UserDashboard from './pages/UserDashboard'
+import CreatePlanPage from './pages/CreatePlanPage'
+import { AuthProvider } from './context/AuthContext'
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* เส้นทางที่ใช้ไฟล์ที่มีจริง */}
-        <Route path="/" element={<PlaceList />} />
-        <Route path="/places" element={<PlaceList />} />
-        <Route path="/places/detail/:id" element={<PlaceDetail />} />
-
-        {/* ถ้าต้องการ future pages ค่อยเพิ่มทีหลัง เช่น:
-            <Route path="/search" element={<SearchPlacesPage />} />
-        */}
-        
-        {/* Optional: fallback สำหรับ path ที่ไม่เจอ */}
-        <Route path="*" element={<div className="p-4">404 - ไม่พบหน้า</div>} />
-      </Routes>
-    </BrowserRouter>
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/search" element={<SearchResultPage />} />
+          <Route path="/place/:id" element={<PlaceDetailPage />} />
+          <Route path="/travel-plan/:id" element={<TravelPlan />} />
+          <Route path="/featured" element={<SharedTravelPlanPage />} />
+          <Route path="/signin" element={<SignIn />} />
+          <Route path="/signup" element={<SignUp />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/dashboard" element={<UserDashboard />} />
+          <Route path="/create-plan" element={<CreatePlanPage />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 
-export default App;
+export default App

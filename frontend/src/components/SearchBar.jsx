@@ -8,7 +8,7 @@ export default function SearchBar() {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log('Search query:', searchQuery);
-    navigate(`/search?query=${encodeURIComponent(searchQuery)}`);
+    navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
     // Add your search functionality here
   };
 
@@ -25,7 +25,7 @@ export default function SearchBar() {
         />
         <button 
           type="submit" 
-          className="px-4 py-3 bg-[#3674B5] text-white rounded-r-lg hover:bg-[#2a5b8e] focus:outline-none"
+          className="px-4 py-3 bg-[#3674B5] text-white rounded-r-lg hover:bg-[#2a5b8e] focus:outline-none cursor-pointer"
         >
           ไปเที่ยวกัน !
         </button>
@@ -33,21 +33,21 @@ export default function SearchBar() {
 
       {/* Filters */}
       <div className="flex flex-wrap justify-center gap-4">
-        <select className="px-4 py-3 bg-gray-200 rounded-lg border border-gray-300 w-full sm:w-48 focus:outline-none" defaultValue="">
+        <select className="px-4 py-3 bg-gray-200 rounded-lg border border-gray-300 w-full sm:w-48 focus:outline-none cursor-pointer" defaultValue="">
           <option value="" disabled>จังหวัด</option>
           <option value="bangkok">กรุงเทพฯ</option>
           <option value="chiangmai">เชียงใหม่</option>
           <option value="phuket">ภูเก็ต</option>
         </select>
 
-        <select className="px-4 py-3 bg-gray-200 rounded-lg border border-gray-300 w-full sm:w-48 focus:outline-none" defaultValue="">
+        <select className="px-4 py-3 bg-gray-200 rounded-lg border border-gray-300 w-full sm:w-48 focus:outline-none cursor-pointer" defaultValue="">
           <option value="" disabled>อำเภอ</option>
           <option value="district1">อำเภอ 1</option>
           <option value="district2">อำเภอ 2</option>
           <option value="district3">อำเภอ 3</option>
         </select>
 
-        <select className="px-4 py-3 bg-gray-200 rounded-lg border border-gray-300 w-full sm:w-48 focus:outline-none" defaultValue="">
+        <select className="px-4 py-3 bg-gray-200 rounded-lg border border-gray-300 w-full sm:w-48 focus:outline-none cursor-pointer" defaultValue="">
           <option value="" disabled>ตำบล</option>
           <option value="subdistrict1">ตำบล 1</option>
           <option value="subdistrict2">ตำบล 2</option>

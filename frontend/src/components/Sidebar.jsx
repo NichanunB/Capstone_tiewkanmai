@@ -21,7 +21,7 @@ function Sidebar({ filters, onFilterChange }) {
               <span>{key}</span>
               <button 
                 onClick={() => onFilterChange(key)}
-                className="ml-1 text-blue-500"
+                className="ml-1 text-blue-500 cursor-pointer"
               >
                 ×
               </button>
@@ -38,7 +38,7 @@ function Sidebar({ filters, onFilterChange }) {
                 type="checkbox"
                 checked={filters[category.key] || false}
                 onChange={() => onFilterChange(category.key)}
-                className="mr-2 form-checkbox h-5 w-5 text-blue-600"
+                className="mr-2 form-checkbox h-5 w-5 text-blue-600 cursor-pointer"
               />
               <span>{category.label}</span>
             </label>

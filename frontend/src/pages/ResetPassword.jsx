@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from 'react-router-dom';
 
 export default function ResetPassword() {
+  const [email, setEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState("");
@@ -27,6 +28,7 @@ export default function ResetPassword() {
     // Dummy success (replace with actual API call later)
     setMessage("Password reset successful!");
     // Reset form fields
+    setEmail("");
     setNewPassword("");
     setConfirmPassword("");
     navigate("/signin");
@@ -35,14 +37,26 @@ export default function ResetPassword() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#3674B5]">
       <div className="bg-white p-8 rounded-lg shadow-md w-140">
-        <h2 className="text-2xl font-bold text-center">Reset Password</h2>
-        <p className="text-lg text-center mb-4">Create a new password</p>
+        <h2 className="text-2xl font-bold text-center">รีเซ็ตรหัสผ่าน</h2>
+        <p className="text-lg text-center mb-4">กรอกรหัสผ่านใหม่</p>
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <p className="text-sm text-left mb-2">New Password</p>
+            <p className="text-sm text-left mb-2">อีเมล</p>
+            <input
+              type="email"
+              placeholder="กรอกอีเมล"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-3 py-2 border rounded-lg"
+              required
+            />
+          </div>
+
+          <div className="mb-4">
+            <p className="text-sm text-left mb-2">รหัสผ่านใหม่</p>
             <input
               type="password"
-              placeholder="Enter new password"
+              placeholder="กรอกรหัสผ่านใหม่"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               className="w-full px-3 py-2 border rounded-lg"
@@ -54,10 +68,10 @@ export default function ResetPassword() {
           </div>
           
           <div className="mb-4">
-            <p className="text-sm text-left mb-2">Confirm Password</p>
+            <p className="text-sm text-left mb-2">ยืนยันรหัสผ่านใหม่</p>
             <input
               type="password"
-              placeholder="Confirm new password"
+              placeholder="ยืนยันรหัสผ่านใหม่"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               className="w-full px-3 py-2 border rounded-lg"
@@ -69,13 +83,13 @@ export default function ResetPassword() {
             type="submit"
             className="w-full bg-[#3674B5] text-white py-2 rounded-lg hover:bg-[#2a5b8e] mt-4"
           >
-            Reset Password
+            รีเซ็ตรหัสผ่าน
           </button>
         </form>
         
         <div className="flex justify-center items-center mt-4">
           <Link to="/signin" className="text-sm text-blue-500 hover:underline">
-            Back to Sign In
+            กลับไปหน้าเข้าสู่ระบบ
           </Link>
         </div>
         
