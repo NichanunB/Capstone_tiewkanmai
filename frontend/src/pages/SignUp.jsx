@@ -1,31 +1,49 @@
 import { useState } from "react";
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 export default function SignUp() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
+  const { register } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setMessage("");
 
     if (password !== confirmPassword) {
-      setMessage("Passwords do not match.");
+      setMessage("รหัสผ่านไม่ตรงกัน");
       return;
     }
 
-    // Dummy check — simulate success if something is entered
-    if (firstName && lastName && username && email && password) {
-      setMessage("Account created successfully!");
-      navigate("/signin");
-    } else {
-      setMessage("Please fill all fields.");
+    setIsLoading(true);
+
+    try {
+      const result = await register({
+        firstName,
+        lastName,
+        email,
+        password
+      });
+
+      if (result.success) {
+        setMessage("สมัครสมาชิกสำเร็จ กำลังนำคุณไปยังหน้าเข้าสู่ระบบ");
+        setTimeout(() => navigate("/signin"), 2000);
+      } else {
+        setMessage(result.message);
+      }
+    } catch (error) {
+      setMessage("เกิดข้อผิดพลาดในการสมัครสมาชิก");
+      console.error(error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -59,15 +77,6 @@ export default function SignUp() {
               />
             </div>
           </div>
-          <p className="text-sm text-left mb-2">ชื่อผู้ใช้</p>
-          <input
-            type="text"
-            placeholder="ชื่อผู้ใช้"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            className="w-full px-3 py-2 mb-4 border rounded-lg"
-            required
-          />
           <p className="text-sm text-left mb-2">อีเมล</p>
           <input
             type="email"
@@ -85,6 +94,7 @@ export default function SignUp() {
             onChange={(e) => setPassword(e.target.value)}
             className="w-full px-3 py-2 mb-4 border rounded-lg"
             required
+            minLength={6}
           />
           <p className="text-sm text-left mb-2">ยืนยันรหัสผ่าน</p>
           <input
@@ -97,9 +107,10 @@ export default function SignUp() {
           />
           <button
             type="submit"
-            className="w-full bg-[#3674B5] text-white py-2 rounded-lg hover:bg-[#2a5b8e] mt-4"
+            disabled={isLoading}
+            className={`w-full bg-[#3674B5] text-white py-2 rounded-lg hover:bg-[#2a5b8e] mt-4 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
           >
-            สมัครสมาชิก
+            {isLoading ? 'กำลังดำเนินการ...' : 'สมัครสมาชิก'}
           </button>
         </form>
         <div className="flex justify-center items-center mt-4 gap-1">
@@ -109,7 +120,9 @@ export default function SignUp() {
           </Link>
         </div>
         {message && (
-          <p className="mt-4 text-center text-sm text-gray-700">{message}</p>
+          <p className={`mt-4 text-center text-sm ${message.includes("สำเร็จ") ? "text-green-500" : "text-red-500"}`}>
+            {message}
+          </p>
         )}
       </div>
     </div>

@@ -1,64 +1,83 @@
-import React from 'react';
-import Navbar from '../components/Navbar';
-import PlaceDetail from '../components/PlaceDetail';
-import RecommendedPlaces from '../components/RecommendedPlaces';
-import Footer from '../components/Footer';
+import React, { useEffect, useRef } from 'react';
+import PlaceHeader from './PlaceHeader';
 
-const templeDescription = `วัดมังกรกมลาวาส หรือ วัดเล่งเน่ยยี่ เยาวราช เป็นวัดในสังกัดคณะสงฆ์จีนนิกายแห่งประเทศไทย ก่อตั้งขึ้นเมื่อปี พ.ศ. 2414 บนถนนเจริญกรุง ระหว่างซอยเจริญกรุง 19 และ 21 โดยวัดมีลักษณะสถาปัตยกรรมเป็นแบบทางจีนตอนใต้ของสกุลช่างแต้จิ๋ว โดยวางแปลนตามแบบ วัดหลวง คือ มี วิหารท้าวจตุโลกบาล เป็นวิหารแรก ตรงกลางเป็นพระอุโบสถ ข้างหลังพระอุโบสถเป็นวิหารเทพเจ้า เป็นวัดที่มีศิลปะงดงาม`;
+const PlaceDetail = ({
+  title,
+  address,
+  rating,
+  tags,
+  description,
+  imageUrl,
+  latitude,
+  longitude
+}) => {
+  const mapContainerRef = useRef(null);
+  const mapRef = useRef(null);
 
-const recommendedPlaces = [
-  {
-    id: 1,
-    title: 'ดอยอ่างขาง',
-    imageUrl: 'https://images.unsplash.com/photo-1580181540753-3ffc51ddbb2e?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
-    location: 'เชียงใหม่',
-    rating: 4,
-    tags: ['ดอย']
-  },
-  {
-    id: 2,
-    title: 'คลองบางหลวง',
-    imageUrl: 'https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
-    location: 'กรุงเทพ',
-    rating: 4.5,
-    tags: ['คลอง', 'ล่องเรือ', 'ตลาด']
-  },
-  {
-    id: 3,
-    title: 'ตลาดน้ำตลาด',
-    imageUrl: 'https://images.unsplash.com/photo-1580674285054-bed31e145f59?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
-    location: 'กรุงเทพ',
-    rating: 4,
-    tags: ['ที่เที่ยวกลางคืน']
-  }
-];
+  // สร้างแผนที่เมื่อ component mount และมีพิกัด
+  useEffect(() => {
+    // ถ้ามีพิกัดและ Longdo Map API โหลดแล้ว
+    if (latitude && longitude && mapContainerRef.current && window.longdo) {
+      // สร้างแผนที่
+      const map = new window.longdo.Map({
+        placeholder: mapContainerRef.current,
+        language: 'th',
+        zoom: 15,
+        location: { lon: longitude, lat: latitude }
+      });
 
-const PlaceDetailPage = () => {
+      // เพิ่มหมุดที่พิกัดนั้น
+      const marker = new window.longdo.Marker({ lon: longitude, lat: latitude });
+      map.Overlays.add(marker);
+
+      // เก็บไว้เพื่อทำความสะอาดเมื่อ component unmount
+      mapRef.current = map;
+    }
+
+    // Cleanup เมื่อ component unmount
+    return () => {
+      if (mapRef.current) {
+        mapRef.current = null;
+      }
+    };
+  }, [latitude, longitude]);
+
   return (
-    <div className="min-h-screen bg-[#E7F9FF] flex flex-col">
-      <Navbar />
-      <div className="container mx-auto px-4 py-6 flex-grow flex items-center">
-        <div className="bg-white rounded-lg shadow-lg w-full p-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="md:col-span-2">
-              <PlaceDetail
-                title="วัดเล่งเน่ยยี่"
-                address="423 ถ. เจริญกรุง แขวงป้อมปราบ เขตป้อมปราบศัตรูพ่าย กรุงเทพมหานคร 10100"
-                rating={4.7}
-                tags={['วัด', 'สถาปัตยกรรมศาลเจ้า', 'บูชา', 'แห่เจ้า']}
-                description={templeDescription}
-                imageUrl="https://images.unsplash.com/photo-1528159936662-d5c754040bbb?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3"
-              />
-            </div>
-            <div>
-              <RecommendedPlaces places={recommendedPlaces} />
-            </div>
-          </div>
-        </div>
+    <div className="mb-6">
+      <PlaceHeader
+        title={title}
+        address={address}
+        rating={rating}
+        tags={tags}
+      />
+      <div className="rounded overflow-hidden mb-4">
+        <img 
+          src={imageUrl || 'https://via.placeholder.com/800x400?text=No+Image+Available'} 
+          alt={title} 
+          className="w-full h-80 object-cover" 
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = 'https://via.placeholder.com/800x400?text=Image+Not+Found';
+          }}
+        />
       </div>
-      <Footer />
+      <p className="text-gray-700 text-sm leading-relaxed">{description}</p>
+      <div className="border-t border-gray-200 my-6"></div>
+      <h2 className="text-2xl font-bold mb-4">แผนที่</h2>
+      <div className="h-80 bg-gray-200 rounded overflow-hidden">
+        {latitude && longitude ? (
+          <div 
+            ref={mapContainerRef} 
+            style={{ width: '100%', height: '100%' }}
+          ></div>
+        ) : (
+          <div className="flex items-center justify-center h-full text-gray-500">
+            ไม่มีข้อมูลแผนที่
+          </div>
+        )}
+      </div>
     </div>
   );
 };
 
-export default PlaceDetailPage;
+export default PlaceDetail;

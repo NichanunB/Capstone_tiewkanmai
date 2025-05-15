@@ -9,7 +9,11 @@ import com.tiewkanmai.repository.RegionRepository;
 
 import java.util.List;
 
-@CrossOrigin(origins = "*", maxAge = 3600)
+@CrossOrigin(
+  origins = {"http://localhost:5173", "http://localhost:3000"},
+  allowCredentials = "true",
+  maxAge = 3600
+)
 @RestController
 @RequestMapping("/api/regions")
 public class RegionController {

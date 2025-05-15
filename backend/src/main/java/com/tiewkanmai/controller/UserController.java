@@ -13,7 +13,11 @@ import com.tiewkanmai.service.UserService;
 
 import jakarta.validation.Valid;
 
-@CrossOrigin(origins = "*", maxAge = 3600)
+@CrossOrigin(
+  origins = {"http://localhost:5173", "http://localhost:3000"},
+  allowCredentials = "true",
+  maxAge = 3600
+)
 @RestController
 @RequestMapping("/api/user")
 public class UserController {

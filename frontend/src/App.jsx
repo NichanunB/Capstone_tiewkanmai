@@ -1,5 +1,5 @@
+// src/App.jsx
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { useState } from 'react'
 import './App.css'
 import Home from './pages/Home'
 import SignIn from './pages/SignIn'
