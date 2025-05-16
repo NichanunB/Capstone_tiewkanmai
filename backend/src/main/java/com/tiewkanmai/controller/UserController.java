@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/user")
 public class UserController {
+
     @Autowired
     UserService userService;
 
@@ -28,12 +29,13 @@ public class UserController {
     public ResponseEntity<?> getUserProfile() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         UserDetailsImpl userDetails = (UserDetailsImpl) auth.getPrincipal();
+        User user = userService.getUserById(userDetails.getId());
 
-        return ResponseEntity.ok().body(new UserProfileResponse(
-                userDetails.getId(),
-                userDetails.getFirstName(),
-                userDetails.getLastName(),
-                userDetails.getEmail()
+        return ResponseEntity.ok(new UserProfileResponse(
+            user.getId(),
+            user.getFirstName(),
+            user.getLastName(),
+            user.getEmail()
         ));
     }
 
@@ -42,15 +44,15 @@ public class UserController {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         UserDetailsImpl userDetails = (UserDetailsImpl) auth.getPrincipal();
 
-        User updatedUser = userService.updateProfile(
-                userDetails.getId(),
-                userUpdate.getFirstName(),
-                userUpdate.getLastName(),
-                userUpdate.getEmail(),
-                userUpdate.getPreferences()
+        userService.updateProfile(
+            userDetails.getId(),
+            userUpdate.getFirstName(),
+            userUpdate.getLastName(),
+            userUpdate.getEmail(),
+            userUpdate.getPreferences()
         );
 
-        return ResponseEntity.ok().body(new MessageResponse("Profile updated successfully!"));
+        return ResponseEntity.ok(new MessageResponse("Profile updated successfully!"));
     }
 
     @PutMapping("/password")
@@ -59,12 +61,12 @@ public class UserController {
         UserDetailsImpl userDetails = (UserDetailsImpl) auth.getPrincipal();
 
         MessageResponse response = userService.changePassword(
-                userDetails.getId(),
-                passwordRequest.getOldPassword(),
-                passwordRequest.getNewPassword()
+            userDetails.getId(),
+            passwordRequest.getOldPassword(),
+            passwordRequest.getNewPassword()
         );
 
-        return ResponseEntity.ok().body(response);
+        return ResponseEntity.ok(response);
     }
 
     // Inner class for password change request

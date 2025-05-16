@@ -1,30 +1,50 @@
-import React, { useState } from 'react';
-import logo from '../assets/logo.png'
-import { Link } from 'react-router-dom';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import logo from '../assets/logo.png';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+// import axios from 'axios'; // สำหรับเชื่อม backend จริง
 
 const UserDashboard = () => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
   const [activeMenu, setActiveMenu] = useState('profile');
   const [isEditing, setIsEditing] = useState(false);
   const [profileData, setProfileData] = useState({
-    firstName: 'สมชาย',
-    lastName: 'รักเรียน',
-    username: 'somchai123',
-    email: 'somchai@example.com',
-    profilePicture: null
+    firstName: '',
+    lastName: '',
+    username: '',
+    email: '',
+    profilePicture: null,
+    profilePictureUrl: '',
   });
 
+  // เมื่อ user ใน context เปลี่ยน (login/logout) ให้อัปเดต profileData
+  useEffect(() => {
+    if (user) {
+      setProfileData(prev => ({
+        ...prev,
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        username: user.username || '', // ถ้าไม่มี username backend ก็จะเป็นค่าว่าง
+        email: user.email || '',
+      }));
+    }
+  }, [user]);
+
+  // เปลี่ยนรูปโปรไฟล์ (แสดง preview ชั่วคราว)
   const handleProfilePictureChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       setProfileData(prev => ({
         ...prev,
-        profilePicture: URL.createObjectURL(file)
+        profilePicture: file,
+        profilePictureUrl: URL.createObjectURL(file),
       }));
     }
   };
 
+  // เปลี่ยนค่าในฟอร์มแก้ไขโปรไฟล์
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setProfileData(prev => ({
@@ -33,30 +53,58 @@ const UserDashboard = () => {
     }));
   };
 
-  const handlePasswordChange = (e) => {
-    e.preventDefault();
-    // Add password change logic here
-  };
-
-  const handleDeleteAccount = () => {
-    if (window.confirm('คุณแน่ใจหรือไม่ว่าต้องการลบบัญชีผู้ใช้งานของคุณ การลบบัญชีจะไม่สามารถกู้คืนได้')) {
-      // Add account deletion logic here
-    }
-  };
-
-  const handleSaveProfile = () => {
-    // Add save profile logic here
-    setIsEditing(false);
-  };
-
-  const { logout } = useAuth();
-  const navigate = useNavigate();
-
+  // ออกจากระบบ
   const handleLogout = () => {
     logout();
     navigate('/');
   };
 
+  // เซฟโปรไฟล์ (ตัวอย่างเฉย ๆ)
+  const handleSaveProfile = (e) => {
+    e.preventDefault();
+    setIsEditing(false);
+    alert('บันทึกโปรไฟล์สำเร็จ (ตัวอย่าง)');
+    // เมื่อเชื่อม backend จริง: อัปเดตข้อมูลใน backend แล้ว update user context ด้วย
+    // เช่น await axios.put(...); setUser({...})
+  };
+
+  // ลบบัญชี (ตัวอย่าง)
+  const handleDeleteAccount = () => {
+    if (window.confirm('ต้องการลบบัญชีผู้ใช้?')) {
+      alert('ลบบัญชีสำเร็จ (ตัวอย่าง)');
+      logout();
+      navigate('/');
+      // เมื่อเชื่อม backend จริง: await axios.delete(...);
+    }
+  };
+
+  // ฟอร์มเปลี่ยนรหัสผ่าน (mock)
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+
+  const handlePasswordChangeInput = (e) => {
+    const { name, value } = e.target;
+    setPasswordForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handlePasswordChange = (e) => {
+    e.preventDefault();
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      alert('รหัสผ่านใหม่ไม่ตรงกัน');
+      return;
+    }
+    alert('เปลี่ยนรหัสผ่านสำเร็จ (ตัวอย่าง)');
+    setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    // เมื่อเชื่อม backend จริง: await axios.post(...);
+  };
+
+  // Sidebar menu
   const menuItems = [
     {
       id: 'profile',
@@ -87,9 +135,11 @@ const UserDashboard = () => {
     }
   ];
 
+  // ========================== RENDER ==========================
+
+  // ดูโปรไฟล์
   const renderProfileView = () => (
     <div className="space-y-8">
-      {/* Profile View Section */}
       <div>
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-xl font-semibold">ข้อมูลโปรไฟล์</h3>
@@ -103,13 +153,11 @@ const UserDashboard = () => {
             <span>แก้ไขโปรไฟล์</span>
           </button>
         </div>
-
         <div className="bg-white rounded-lg p-6 space-y-6">
-          {/* Profile Picture */}
           <div className="flex items-center space-x-6">
             <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-200">
-              {profileData.profilePicture ? (
-                <img src={profileData.profilePicture} alt="Profile" className="w-full h-full object-cover" />
+              {profileData.profilePictureUrl ? (
+                <img src={profileData.profilePictureUrl} alt="Profile" className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-gray-400">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -120,53 +168,40 @@ const UserDashboard = () => {
             </div>
             <div>
               <h4 className="text-lg font-medium">{profileData.firstName} {profileData.lastName}</h4>
-              <p className="text-gray-600">@{profileData.username}</p>
-            </div>
-          </div>
-
-          {/* Profile Information */}
-          <div className="grid grid-cols-2 gap-6">
-            <div>
-              <h5 className="text-sm font-medium text-gray-500 mb-1">ชื่อ</h5>
-              <p className="text-gray-900">{profileData.firstName}</p>
-            </div>
-            <div>
-              <h5 className="text-sm font-medium text-gray-500 mb-1">นามสกุล</h5>
-              <p className="text-gray-900">{profileData.lastName}</p>
-            </div>
-            <div>
-              <h5 className="text-sm font-medium text-gray-500 mb-1">ชื่อผู้ใช้</h5>
-              <p className="text-gray-900">@{profileData.username}</p>
-            </div>
-            <div>
-              <h5 className="text-sm font-medium text-gray-500 mb-1">อีเมล</h5>
+              {/* ถ้าไม่มี username จะแสดง - */}
+              <p className="text-gray-600">@{profileData.username ? profileData.username : "-"}</p>
               <p className="text-gray-900">{profileData.email}</p>
             </div>
           </div>
         </div>
       </div>
-
-      {/* Account Settings Section */}
       <div className="border-t pt-8">
         <h3 className="text-xl font-semibold mb-6">ตั้งค่าบัญชี</h3>
-        
-        {/* Password Change */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-700 mb-2">เปลี่ยนรหัสผ่าน</label>
           <form onSubmit={handlePasswordChange} className="space-y-4">
             <input
               type="password"
               placeholder="รหัสผ่านปัจจุบัน"
+              name="currentPassword"
+              value={passwordForm.currentPassword}
+              onChange={handlePasswordChangeInput}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#3674B5] focus:border-[#3674B5]"
             />
             <input
               type="password"
               placeholder="รหัสผ่านใหม่"
+              name="newPassword"
+              value={passwordForm.newPassword}
+              onChange={handlePasswordChangeInput}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#3674B5] focus:border-[#3674B5]"
             />
             <input
               type="password"
               placeholder="ยืนยันรหัสผ่านใหม่"
+              name="confirmPassword"
+              value={passwordForm.confirmPassword}
+              onChange={handlePasswordChangeInput}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#3674B5] focus:border-[#3674B5]"
             />
             <button
@@ -177,8 +212,6 @@ const UserDashboard = () => {
             </button>
           </form>
         </div>
-
-        {/* Delete Account */}
         <div>
           <button
             onClick={handleDeleteAccount}
@@ -191,35 +224,34 @@ const UserDashboard = () => {
     </div>
   );
 
+  // ฟอร์มแก้ไขโปรไฟล์
   const renderProfileEdit = () => (
-    <div className="space-y-8">
-      {/* Profile Settings Section */}
+    <form onSubmit={handleSaveProfile} className="space-y-8">
       <div>
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-xl font-semibold">แก้ไขโปรไฟล์</h3>
           <div className="space-x-2">
             <button
+              type="button"
               onClick={() => setIsEditing(false)}
               className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 cursor-pointer"
             >
               ยกเลิก
             </button>
             <button
-              onClick={handleSaveProfile}
+              type="submit"
               className="px-4 py-2 bg-[#3674B5] text-white rounded-lg hover:bg-[#2a5b8e] cursor-pointer"
             >
               บันทึก
             </button>
           </div>
         </div>
-        
-        {/* Profile Picture */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-700 mb-2">รูปโปรไฟล์</label>
           <div className="flex items-center space-x-4">
             <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-200">
-              {profileData.profilePicture ? (
-                <img src={profileData.profilePicture} alt="Profile" className="w-full h-full object-cover" />
+              {profileData.profilePictureUrl ? (
+                <img src={profileData.profilePictureUrl} alt="Profile" className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-gray-400">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -243,8 +275,6 @@ const UserDashboard = () => {
             </label>
           </div>
         </div>
-
-        {/* Name Fields */}
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">ชื่อ</label>
@@ -267,8 +297,6 @@ const UserDashboard = () => {
             />
           </div>
         </div>
-
-        {/* Username */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-700 mb-2">ชื่อผู้ใช้</label>
           <input
@@ -279,8 +307,6 @@ const UserDashboard = () => {
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#3674B5] focus:border-[#3674B5]"
           />
         </div>
-
-        {/* Email */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-700 mb-2">อีเมล</label>
           <input
@@ -292,9 +318,10 @@ const UserDashboard = () => {
           />
         </div>
       </div>
-    </div>
+    </form>
   );
 
+  // ----------------- MAIN RETURN -----------------
   return (
     <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}
@@ -336,7 +363,7 @@ const UserDashboard = () => {
           {activeMenu === 'favorites' && (
             <div>
               <h3 className="text-xl font-semibold mb-4">แหล่งท่องเที่ยวโปรด</h3>
-              <p className="text-gray-600">ดูและจัดการแหล่งท่องเที่ยวที่คุณชื่นชอบได้ที่นี่</p>
+              <p className="text-gray-600">[รอเชื่อม backend จริง]</p>
             </div>
           )}
           {activeMenu === 'travel-plans' && (
@@ -350,34 +377,7 @@ const UserDashboard = () => {
                   <span>สร้างแผนท่องเที่ยวใหม่</span>
                 </Link>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {/* Sample Travel Plan Card */}
-                <div className="bg-white border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
-                  <div className="flex justify-between items-start mb-4">
-                    <h4 className="text-lg font-semibold">เที่ยวเชียงใหม่</h4>
-                    <span className="px-2 py-1 bg-green-100 text-green-800 text-sm rounded-full">กำลังจะมาถึง</span>
-                  </div>
-                  <div className="space-y-2 text-gray-600">
-                    <p className="flex items-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      15-20 มีนาคม 2024
-                    </p>
-                    <p className="flex items-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      5 สถานที่
-                    </p>
-                  </div>
-                  <div className="mt-4 flex justify-end space-x-2">
-                    <button className="px-3 py-1 text-sm text-[#3674B5] hover:bg-[#3674B5]/10 rounded">แก้ไข</button>
-                    <button className="px-3 py-1 text-sm text-red-500 hover:bg-red-50 rounded">ลบ</button>
-                  </div>
-                </div>
-              </div>
+              <p className="text-gray-600">[รอเชื่อม backend จริง]</p>
             </div>
           )}
         </div>
