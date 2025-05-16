@@ -1,7 +1,5 @@
-// src/pages/SearchResultPage.jsx
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { placeService, categoryService } from '../services/api';
 import Filters from '../components/Filters';
 import ResultCard from '../components/ResultCard';
 import ResultTabs from '../components/ResultTabs';
@@ -10,182 +8,175 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
 export default function SearchResultPage() {
-  const [attractions, setAttractions] = useState([]);
+  const [activeTab, setActiveTab] = useState('ที่ท่องเที่ยว');
   const [favorites, setFavorites] = useState({});
   const [selectedFilters, setSelectedFilters] = useState([]);
-  const [activeTab, setActiveTab] = useState('ที่ท่องเที่ยว');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [categories, setCategories] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  
-  const location = useLocation();
-  const searchParams = new URLSearchParams(location.search);
-  const searchQuery = searchParams.get('q') || '';
-  const provinceParam = searchParams.get('province') || '';
-  const categoryParam = searchParams.get('category') || '';
-  
-  // ดึงค่า filters จาก backend
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await categoryService.getAllCategories();
-        const fetchedCategories = response.data.map(category => ({
-          id: category.id.toString(),
-          label: category.name
-        }));
-        setCategories(fetchedCategories);
-      } catch (err) {
-        console.error('ไม่สามารถโหลดหมวดหมู่ได้:', err);
-      }
-    };
-    
-    fetchCategories();
-  }, []);
-  
-  // ดึงข้อมูลการค้นหา
-  useEffect(() => {
-    const fetchSearchResults = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-        let response;
-        // ถ้ามีแค่ searchQuery และไม่มี filter อื่น
-        if (searchQuery && selectedFilters.length === 0 && !provinceParam && !categoryParam) {
-          response = await placeService.searchPlaces(searchQuery);
-          setAttractions(response.data);
-          setTotalPages(Math.ceil(response.data.length / 10));
-        } else {
-          // ถ้ามี filter หมวดหมู่หรือ province/category
-          const params = {};
-          if (searchQuery) params.q = searchQuery;
-          if (provinceParam) params.province = provinceParam;
-          // ถ้าเลือก filter หมวดหมู่ ให้ส่ง category param (รองรับหลายอัน)
-          if (selectedFilters.length > 0) params.category = selectedFilters.join(',');
-          else if (categoryParam) params.category = categoryParam;
-          params.page = currentPage;
-          params.size = 10;
-          response = await placeService.getAllPlaces(params);
-          if (response.data.content) {
-            setAttractions(response.data.content);
-            setTotalPages(response.data.totalPages);
-          } else {
-            setAttractions(response.data);
-            setTotalPages(Math.ceil(response.data.length / 10));
-          }
-        }
-      } catch (err) {
-        console.error('ไม่สามารถโหลดผลการค้นหา:', err);
-        setError('ไม่สามารถโหลดผลการค้นหาได้');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchSearchResults();
-  }, [searchQuery, provinceParam, categoryParam, selectedFilters, currentPage]);
+  // ข้อมูลตัวอย่างที่จะแสดงเสมอ โดยไม่ต้องเรียก API
+  const attractions = [{
+    id: 1,
+    title: "เยาวราช",
+    description: "ย่านจีนอัน อาหารแซบ และบรรยากาศคึกคัก",
+    image: "https://via.placeholder.com/300x200?text=เยาวราช",
+    category: "ที่ท่องเที่ยว",
+  },
+  {
+    id: 2,
+    title: "วัดเล่งเน่ยยี่",
+    description:
+      "วัดจีนที่เก่าแก่ที่สุดในประเทศไทย ตั้งอยู่ในย่านเยาวราช สร้างขึ้นในสมัยรัชกาลที่ 3 เป็นศาสนสถานของชาวจีนที่เข้ามาตั้งรกรากในไทย",
+    image: "https://via.placeholder.com/300x200?text=วัดเล่งเน่ยยี่",
+    category: "ที่ท่องเที่ยว",
+    isFavorite: true,
+  },
+  {
+    id: 3,
+    title: "ถนนข้าวสาร",
+    description:
+      "ถนนสายสั้นๆ ในเขตพระนคร กรุงเทพฯ เป็นแหล่งท่องเที่ยวยอดนิยมของนักท่องเที่ยวชาวต่างชาติ",
+    image: "https://via.placeholder.com/300x200?text=ถนนข้าวสาร",
+    category: "ที่ท่องเที่ยว",
+  },
+  {
+    id: 4,
+    title: "วัดพระแก้ว",
+    description:
+      "วัดพระศรีรัตนศาสดาราม หรือที่เรียกกันทั่วไปว่า วัดพระแก้ว เป็นวัดที่สำคัญที่สุดในประเทศไทย ตั้งอยู่ในพระบรมมหาราชวัง",
+    image: "https://via.placeholder.com/300x200?text=วัดพระแก้ว",
+    category: "ที่ท่องเที่ยว",
+  },
+  {
+    id: 5,
+    title: "ตลาดน้ำอัมพวา",
+    description:
+      "ตลาดน้ำยามเย็นและกลางคืนที่มีชื่อเสียงของอำเภอเมืองสมุทรสงคราม เป็นแหล่งท่องเที่ยวชมหิ่งห้อยในยามค่ำคืน",
+    image: "https://via.placeholder.com/300x200?text=ตลาดน้ำอัมพวา",
+    category: "ร้านอาหาร",
+  },
+  {
+    id: 6,
+    title: "คลองบางหลวง",
+    description:
+      "คลองในเขตธนบุรี กรุงเทพฯ เป็นแหล่งท่องเที่ยวเชิงอนุรักษ์ที่ยังคงรักษาวิถีชีวิตริมน้ำแบบดั้งเดิม",
+    image: "https://via.placeholder.com/300x200?text=คลองบางหลวง",
+    category: "ที่ท่องเที่ยว",
+  }];
   
+  const filters = [
+    { id: "ชายหาด", label: "ชายหาด" },
+    { id: "ทะเล", label: "ทะเล" },
+    { id: "เกาะ", label: "เกาะ" },
+    { id: "ภูเขา", label: "ภูเขา" },
+    { id: "น้ำตก", label: "น้ำตก" },
+    { id: "ป่า", label: "ป่า" },
+    { id: "ทะเลสาบ", label: "ทะเลสาบ" },
+    { id: "สวนสาธารณะ", label: "สวนสาธารณะ" },
+    { id: "ทุ่งดอกไม้", label: "ทุ่งดอกไม้" },
+    { id: "ถ้ำ", label: "ถ้ำ" },
+    { id: "วัด", label: "วัด" },
+    { id: "โบราณสถาน", label: "โบราณสถาน" },
+    { id: "พิพิธภัณฑ์", label: "พิพิธภัณฑ์" },
+    { id: "หอศิลป์", label: "หอศิลป์" },
+    { id: "ตลาดนัด", label: "ตลาดนัด" },
+    { id: "ถนนคนเดิน", label: "ถนนคนเดิน" },
+    { id: "ห้างสรรพสินค้า", label: "ห้างสรรพสินค้า" },
+    { id: "คาเฟ่", label: "คาเฟ่" },
+    { id: "ร้านอาหาร", label: "ร้านอาหาร" },
+    { id: "สถานบันเทิง", label: "สถานบันเทิง (ผับ บาร์)" },
+    { id: "สวนสนุก", label: "สวนสนุก" },
+    { id: "สวนน้ำ", label: "สวนน้ำ" }
+  ];
+  
+  const tabs = ['ที่ท่องเที่ยว', 'ร้านอาหาร', 'แผนเที่ยว'];
+
   const toggleFavorite = (id) => {
     setFavorites(prev => ({
       ...prev,
       [id]: !prev[id]
     }));
-    
-    // ตรงนี้อาจจะต้องเพิ่มการบันทึกรายการโปรดลง API
-    // ถ้าผู้ใช้ล็อกอินแล้ว
   };
+
+  function useQuery() {
+    return new URLSearchParams(useLocation().search);
+  }
   
+  const query = useQuery();
+  const searchQuery = query.get('q') || 'กรุงเทพมหานคร'; // Default fallback
+
   const handleFilterChange = (newFilters) => {
     setSelectedFilters(newFilters);
-    setCurrentPage(1); // กลับไปหน้าแรกเมื่อมีการเปลี่ยนฟิลเตอร์
-  };
-  
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-    // ในกรณีที่ API ไม่รองรับการแบ่งหน้า
-    // เราจะต้องทำการแบ่งหน้าเอง (client-side)
   };
 
-  // แสดง loading indicator
-  if (loading && currentPage === 1) {
-    return (
-      <div className="bg-[#E7F9FF]">
-        <Navbar />
-        <div className="container mx-auto px-4 py-8">
-          <div className="p-4">
-            <h1 className="text-lg text-black">แสดงผลการค้นหา {searchQuery}</h1>
-          </div>
-          <div className="flex justify-center items-center py-20">
-            <p className="text-gray-500">กำลังโหลดข้อมูล...</p>
-          </div>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
+  // จำลองการโหลดข้อมูล
+  useEffect(() => {
+    setIsLoading(true);
+    // จำลองการโหลดข้อมูลจาก API เป็นเวลา 1 วินาที
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
+    
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // กรองข้อมูลตามแท็บที่เลือก
+  const filteredAttractions = attractions.filter(item => {
+    // กรองตาม tab
+    if (activeTab === 'ที่ท่องเที่ยว' && item.category !== 'ร้านอาหาร' && item.category !== 'แผนเที่ยว') {
+      return true;
+    }
+    if (activeTab === 'ร้านอาหาร' && item.category === 'ร้านอาหาร') {
+      return true;
+    }
+    if (activeTab === 'แผนเที่ยว' && item.category === 'แผนเที่ยว') {
+      return true;
+    }
+    
+    // ถ้าไม่ตรงกับแท็บใดๆ
+    return false;
+  });
 
   return (
-    <div className="bg-[#E7F9FF]">
+    <div className="bg-[#E7F9FF] min-h-screen">
       <Navbar />
       <div className="container mx-auto px-4 py-8">
         <div className="p-4">
-          <h1 className="text-lg text-black">แสดงผลการค้นหา {searchQuery}</h1>
+          <h1 className="text-lg text-black">แสดงผลการค้นหา "{searchQuery}"</h1>
         </div>
 
-        <div className="flex gap-8">
+        <div className="flex flex-col md:flex-row gap-8">
           <Filters 
             selectedFilters={selectedFilters} 
-            filters={categories} 
+            filters={filters} 
             onFilterChange={handleFilterChange}
           />
           
           <div className="bg-white rounded-lg shadow p-6 flex-1">
             <div className="flex-1">
-              <ResultTabs 
-                tabs={['ที่ท่องเที่ยว', 'ร้านอาหาร', 'แผนเที่ยว']} 
-                activeTab={activeTab} 
-                onTabChange={setActiveTab} 
-              />
+              <ResultTabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
 
-              <div className="mt-4">
-                {error && (
-                  <div className="text-center py-10">
-                    <p className="text-red-500">{error}</p>
-                  </div>
-                )}
-                
-                {!error && attractions.length === 0 && (
-                  <div className="text-center py-10">
-                    <p className="text-gray-500">ไม่พบสถานที่ท่องเที่ยวที่ตรงกับเงื่อนไขของคุณ</p>
-                  </div>
-                )}
-                
-                {!error && attractions.map(attraction => (
-                  <ResultCard
-                    key={attraction.id}
-                    attraction={{
-                      id: attraction.id,
-                      title: attraction.name,
-                      description: attraction.description || 'ไม่มีคำอธิบาย',
-                      image: attraction.image || 'https://via.placeholder.com/300x200',
-                      category: attraction.category
-                    }}
-                    isFavorite={favorites[attraction.id]}
-                    onToggleFavorite={toggleFavorite}
-                  />
-                ))}
-              </div>
+              {isLoading ? (
+                <div className="flex justify-center items-center h-32">
+                  <p>กำลังโหลดข้อมูล...</p>
+                </div>
+              ) : filteredAttractions.length > 0 ? (
+                <div className="mt-4">
+                  {filteredAttractions.map(attraction => (
+                    <ResultCard
+                      key={attraction.id}
+                      attraction={attraction}
+                      isFavorite={favorites[attraction.id] || attraction.isFavorite}
+                      onToggleFavorite={toggleFavorite}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p>ไม่พบข้อมูลที่ค้นหา</p>
+                </div>
+              )}
             </div>
-            
-            {totalPages > 1 && (
-              <Pagination 
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onChange={handlePageChange}
-              />
-            )}
+            <Pagination />
           </div>
         </div>
       </div>

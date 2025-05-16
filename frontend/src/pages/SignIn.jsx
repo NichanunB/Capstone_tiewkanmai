@@ -30,16 +30,28 @@ export default function SignIn() {
     }
 
     try {
+      // Debug logging
+      console.log("Attempting login with:", { email, password: "******" });
+      
       const result = await login({ email, password });
+      console.log("Login result:", result);
+      
       if (result.success) {
         // Redirect ไปยัง URL ที่ถูกกำหนดไว้ หรือหน้าแรก
         navigate(redirectUrl);
       } else {
-        setMessage(result.message);
+        setMessage(result.message || "เข้าสู่ระบบล้มเหลว โปรดตรวจสอบข้อมูลของคุณ");
       }
     } catch (error) {
-      setMessage("เกิดข้อผิดพลาดในการเข้าสู่ระบบ");
-      console.error(error);
+      console.error("Login error:", error);
+      console.error("Error details:", error.response?.data);
+      
+      const errorMessage = 
+        error.response?.data?.message || 
+        (error.response?.status === 401 ? "อีเมลหรือรหัสผ่านไม่ถูกต้อง" : 
+        "เกิดข้อผิดพลาดในการเข้าสู่ระบบ, กรุณาลองใหม่อีกครั้ง");
+      
+      setMessage(errorMessage);
     } finally {
       setIsLoading(false);
     }

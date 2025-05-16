@@ -22,11 +22,17 @@ const PlaceDetailPage = () => {
         
         // เรียกข้อมูลสถานที่ท่องเที่ยว
         const placeResponse = await placeService.getPlaceById(id);
+        console.log("Place data:", placeResponse.data);
         setPlace(placeResponse.data);
         
         // เรียกข้อมูลสถานที่ท่องเที่ยวที่เกี่ยวข้อง
-        const relatedResponse = await placeService.getRelatedPlaces(id);
-        setRelatedPlaces(relatedResponse.data);
+        try {
+          const relatedResponse = await placeService.getRelatedPlaces(id);
+          setRelatedPlaces(relatedResponse.data);
+        } catch (relatedError) {
+          console.warn("Could not load related places:", relatedError);
+          setRelatedPlaces([]);
+        }
       } catch (err) {
         console.error('ไม่สามารถโหลดข้อมูลสถานที่:', err);
         setError('ไม่สามารถโหลดข้อมูลสถานที่ได้');
@@ -47,8 +53,8 @@ const PlaceDetailPage = () => {
       title: place.name,
       imageUrl: place.image,
       location: place.province,
-      rating: place.rating,
-      tags: [place.category]
+      rating: place.rating || 0,
+      tags: place.category ? [place.category] : []
     }));
   };
 
@@ -84,7 +90,7 @@ const PlaceDetailPage = () => {
           title={place.name}
           address={place.address || ''}
           rating={place.rating || 0}
-          tags={[place.category]}
+          tags={place.categories || [place.category].filter(Boolean)}
           description={place.description || 'ไม่มีข้อมูลรายละเอียด'}
           imageUrl={place.image}
           latitude={place.latitude}
