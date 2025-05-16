@@ -24,4 +24,7 @@ public interface PlaceRepository extends JpaRepository<Place, Long> {
     // Using dummy method for now
     @Query("SELECT p FROM Place p WHERE p.latitude IS NOT NULL AND p.longitude IS NOT NULL")
     List<Place> findNearby(@Param("lat") Double latitude, @Param("lng") Double longitude, @Param("radius") Integer radiusKm);
+
+    @Query("SELECT p FROM Place p WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))")
+    List<Place> searchByName(@Param("keyword") String keyword);
 }

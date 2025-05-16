@@ -1,7 +1,8 @@
+// src/components/HeroSection.jsx
 import React from 'react';
 import SearchBar from './Searchbar';
 
-const HeroSection = () => {
+const HeroSection = ({ provinces = [], categories = [] }) => {
   return (
     <div className="hero-image min-h-screen flex items-center justify-center pt-20 pb-20">
       <div className="container mx-auto px-6">
@@ -14,12 +15,12 @@ const HeroSection = () => {
           </p>
         </div>
         
-        <SearchBar />
+        <SearchBar provinces={provinces} categories={categories} />
         
         <div className="mt-12 flex flex-wrap justify-center gap-6 text-white">
           <div className="bg-white/20 backdrop-blur-sm p-4 rounded-lg text-center w-44">
             <p className="text-sm">มีแหล่งท่องเที่ยวกว่า</p>
-            <p className="font-bold text-2xl">2500+</p>
+            <p className="font-bold text-2xl">1500+</p>
             <p className="text-sm">แห่ง</p>
           </div>
           <div className="bg-white/20 backdrop-blur-sm p-4 rounded-lg text-center w-44">

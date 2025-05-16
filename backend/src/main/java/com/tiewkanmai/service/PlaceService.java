@@ -1,6 +1,7 @@
 package com.tiewkanmai.service;
 
 import com.tiewkanmai.dto.response.PlaceResponse;
+import com.tiewkanmai.dto.request.PlaceRequest;
 import com.tiewkanmai.model.Category;
 import com.tiewkanmai.model.Place;
 import com.tiewkanmai.model.Province;
@@ -62,7 +63,27 @@ public class PlaceService {
         return convertToPlaceResponseList(placeRepository.findAllByProvinceIdAndCategoryId(provinceId, categoryId));
     }
 
-    public Place createPlace(Place place) {
+    public Place createPlace(PlaceRequest request) {
+        Place place = new Place();
+        place.setName(request.getName());
+        place.setDescription(request.getDescription());
+        place.setImg(request.getImg());
+        place.setMap(request.getMap());
+        place.setLatitude(request.getLatitude());
+        place.setLongitude(request.getLongitude());
+        place.setAddress(request.getDistrict() + ", " + request.getSubdistrict());
+        place.setRating(BigDecimal.ZERO);
+        place.setCost(BigDecimal.ZERO);
+        // set category
+        if (request.getCategoryId() != null) {
+            categoryRepository.findById(request.getCategoryId()).ifPresent(place::setCategory);
+        }
+        // set province
+        if (request.getProvinceId() != null) {
+            provinceRepository.findById(request.getProvinceId()).ifPresent(province -> {
+                place.setProvinces(new HashSet<>(Collections.singletonList(province)));
+            });
+        }
         return placeRepository.save(place);
     }
 
@@ -84,6 +105,11 @@ public class PlaceService {
 
     public List<PlaceResponse> getNearbyPlaces(Double latitude, Double longitude, Integer radius) {
         return convertToPlaceResponseList(placeRepository.findNearby(latitude, longitude, radius));
+    }
+
+    public List<PlaceResponse> searchPlaces(String keyword) {
+        List<Place> places = placeRepository.searchByName(keyword);
+        return convertToPlaceResponseList(places);
     }
 
     private PlaceResponse convertToPlaceResponse(Place place) {

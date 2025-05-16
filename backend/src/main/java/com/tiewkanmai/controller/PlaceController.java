@@ -1,7 +1,9 @@
 package com.tiewkanmai.controller;
 
+import com.tiewkanmai.dto.request.PlaceRequest;
 import com.tiewkanmai.dto.response.PlaceResponse;
 import com.tiewkanmai.service.PlaceService;
+import com.tiewkanmai.model.Place;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -63,5 +65,17 @@ public class PlaceController {
 
         List<PlaceResponse> nearbyPlaces = placeService.getNearbyPlaces(lat, lng, radius);
         return ResponseEntity.ok(nearbyPlaces);
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<PlaceResponse>> searchPlaces(@RequestParam String query) {
+        List<PlaceResponse> results = placeService.searchPlaces(query);
+        return ResponseEntity.ok(results);
+    }
+
+    @PostMapping
+    public ResponseEntity<?> createPlace(@RequestBody PlaceRequest request) {
+        Place place = placeService.createPlace(request);
+        return ResponseEntity.ok(place);
     }
 }

@@ -11,6 +11,11 @@ import com.tiewkanmai.dto.response.JwtResponse;
 import com.tiewkanmai.dto.response.MessageResponse;
 import com.tiewkanmai.service.AuthService;
 
+@CrossOrigin(
+  origins = {"http://localhost:5173", "http://localhost:5174", "http://localhost:3000"},
+  allowCredentials = "true",
+  maxAge = 3600
+)
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {

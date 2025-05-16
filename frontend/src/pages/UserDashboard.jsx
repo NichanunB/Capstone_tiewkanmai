@@ -1,49 +1,113 @@
+// src/pages/UserDashboard.jsx
 import React, { useState, useEffect } from 'react';
 import logo from '../assets/logo.png';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { planService, userService } from '../services/api';
 
 const UserDashboard = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, updateUserProfile } = useAuth(); // ❌ ลบ changePassword ออก
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const searchParams = new URLSearchParams(location.search);
+  const reloadParam = searchParams.get('reload');
 
   const [activeMenu, setActiveMenu] = useState('profile');
   const [isEditing, setIsEditing] = useState(false);
+
   const [profileData, setProfileData] = useState({
-    firstName: '',
-    lastName: '',
+    firstName: user?.firstName || '',
+    lastName: user?.lastName || '',
     username: '',
-    email: '',
+    email: user?.email || '',
     profilePicture: null,
     profilePictureUrl: '',
   });
 
-  // เมื่อ user ใน context เปลี่ยน (login/logout) ให้อัปเดต profileData
+  const [userPlans, setUserPlans] = useState([]);
+  const [loadingPlans, setLoadingPlans] = useState(false);
+  const [favoriteList, setFavoriteList] = useState([]);
+  const [loadingFavorites, setLoadingFavorites] = useState(false);
+
   useEffect(() => {
-    if (user) {
-      setProfileData(prev => ({
-        ...prev,
-        firstName: user.firstName || '',
-        lastName: user.lastName || '',
-        username: user.username || '', // ถ้าไม่มี username backend ก็จะเป็นค่าว่าง
-        email: user.email || '',
-      }));
-    }
+    const fetchUserProfile = async () => {
+      try {
+        const response = await userService.getUserProfile();
+        const userData = response.data;
+
+        setProfileData(prev => ({
+          ...prev,
+          firstName: userData.firstName || '',
+          lastName: userData.lastName || '',
+          username: userData.username || '',
+          email: userData.email || '',
+          profilePictureUrl: userData.profilePicture || '',
+        }));
+      } catch (err) {
+        console.error('ไม่สามารถโหลดข้อมูลโปรไฟล์:', err);
+      }
+    };
+
+    fetchUserProfile();
   }, [user]);
 
-  // เปลี่ยนรูปโปรไฟล์ (แสดง preview ชั่วคราว)
-  const handleProfilePictureChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setProfileData(prev => ({
-        ...prev,
-        profilePicture: file,
-        profilePictureUrl: URL.createObjectURL(file),
-      }));
-    }
-  };
+  useEffect(() => {
+    const fetchUserPlans = async () => {
+      if (activeMenu === 'travel-plans' || reloadParam === 'plans') {
+        try {
+          setLoadingPlans(true);
+          const response = await planService.getUserPlans();
+          setUserPlans(response.data);
+        } catch (err) {
+          console.error('ไม่สามารถโหลดแผนท่องเที่ยว:', err);
+        } finally {
+          setLoadingPlans(false);
+        }
+      }
+    };
 
-  // เปลี่ยนค่าในฟอร์มแก้ไขโปรไฟล์
+    fetchUserPlans();
+  }, [activeMenu, reloadParam]);
+
+  useEffect(() => {
+    const fetchFavorites = async () => {
+      if (activeMenu === 'favorites') {
+        try {
+          setLoadingFavorites(true);
+          setFavoriteList([
+            {
+              id: 1,
+              name: "วัดพระแก้ว",
+              image: "https://placehold.co/300x200?text=Temple",
+              description: "พระบรมมหาราชวัง",
+              province: "กรุงเทพมหานคร"
+            },
+            {
+              id: 2,
+              name: "เยาวราช",
+              image: "https://placehold.co/300x200?text=Chinatown",
+              description: "ย่านการค้าและอาหารจีนที่ใหญ่ที่สุดในกรุงเทพฯ",
+              province: "กรุงเทพมหานคร"
+            }
+          ]);
+        } catch (err) {
+          console.error('ไม่สามารถโหลดรายการโปรด:', err);
+        } finally {
+          setLoadingFavorites(false);
+        }
+      }
+    };
+
+    fetchFavorites();
+  }, [activeMenu]);
+
+  useEffect(() => {
+    if (reloadParam === 'plans') {
+      setActiveMenu('travel-plans');
+    }
+  }, [reloadParam]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setProfileData(prev => ({
@@ -52,58 +116,41 @@ const UserDashboard = () => {
     }));
   };
 
-  // ออกจากระบบ
   const handleLogout = () => {
     logout();
     navigate('/');
   };
 
-  // เซฟโปรไฟล์ (ตัวอย่างเฉย ๆ)
-  const handleSaveProfile = (e) => {
+  const handleSaveProfile = async (e) => {
     e.preventDefault();
-    setIsEditing(false);
-    alert('บันทึกโปรไฟล์สำเร็จ');
-    // เมื่อเชื่อม backend จริง: อัปเดตข้อมูลใน backend แล้ว update user context ด้วย
-    // เช่น await axios.put(...); setUser({...})
-  };
+    try {
+      const result = await updateUserProfile({
+        firstName: profileData.firstName,
+        lastName: profileData.lastName,
+        email: profileData.email,
+      });
 
-  // ลบบัญชี (ตัวอย่าง)
-  const handleDeleteAccount = () => {
-    if (window.confirm('ต้องการลบบัญชีผู้ใช้?')) {
-      alert('ลบบัญชีสำเร็จ');
-      logout();
-      navigate('/');
-      // เมื่อเชื่อม backend จริง: await axios.delete(...);
+      if (result.success) {
+        setIsEditing(false);
+      } else {
+        alert(result.message || 'ไม่สามารถบันทึกโปรไฟล์ได้');
+      }
+    } catch (err) {
+      console.error('ไม่สามารถบันทึกโปรไฟล์:', err);
     }
   };
 
-  // ฟอร์มเปลี่ยนรหัสผ่าน (mock)
-  const [passwordForm, setPasswordForm] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
-  });
-
-  const handlePasswordChangeInput = (e) => {
-    const { name, value } = e.target;
-    setPasswordForm(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handlePasswordChange = (e) => {
-    e.preventDefault();
-    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      alert('รหัสผ่านใหม่ไม่ตรงกัน');
-      return;
+  const handleDeletePlan = async (planId) => {
+    if (window.confirm('ต้องการลบแผนท่องเที่ยวนี้?')) {
+      try {
+        await planService.deletePlan(planId);
+        setUserPlans(prev => prev.filter(plan => plan.id !== planId));
+      } catch (err) {
+        console.error('ไม่สามารถลบแผนท่องเที่ยว:', err);
+      }
     }
-    alert('เปลี่ยนรหัสผ่านสำเร็จ');
-    setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
-    // เมื่อเชื่อม backend จริง: await axios.post(...);
   };
 
-  // Sidebar menu
   const menuItems = [
     {
       id: 'profile',
@@ -134,196 +181,125 @@ const UserDashboard = () => {
     }
   ];
 
-  // ========================== RENDER ==========================
-
-  // ดูโปรไฟล์
   const renderProfileView = () => (
-    <div className="space-y-8">
-      <div>
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-xl font-semibold">ข้อมูลโปรไฟล์</h3>
-          <button
-            onClick={() => setIsEditing(true)}
-            className="px-4 py-2 bg-[#3674B5] text-white rounded-lg hover:bg-[#2a5b8e] flex items-center space-x-2 cursor-pointer"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-            </svg>
-            <span>แก้ไขโปรไฟล์</span>
-          </button>
-        </div>
-        <div className="bg-white rounded-lg p-6 space-y-6">
-          <div className="flex items-center space-x-6">
-            <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-200">
-              {profileData.profilePictureUrl ? (
-                <img src={profileData.profilePictureUrl} alt="Profile" className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-gray-400">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                </div>
-              )}
-            </div>
-            <div>
-              <h4 className="text-lg font-medium">{profileData.firstName} {profileData.lastName}</h4>
-              {/* ถ้าไม่มี username จะแสดง - */}
-              <p className="text-gray-600">@{profileData.username ? profileData.username : "-"}</p>
-              <p className="text-gray-900">{profileData.email}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div className="border-t pt-8">
-        <h3 className="text-xl font-semibold mb-6">ตั้งค่าบัญชี</h3>
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">เปลี่ยนรหัสผ่าน</label>
-          <form onSubmit={handlePasswordChange} className="space-y-4">
-            <input
-              type="password"
-              placeholder="รหัสผ่านปัจจุบัน"
-              name="currentPassword"
-              value={passwordForm.currentPassword}
-              onChange={handlePasswordChangeInput}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#3674B5] focus:border-[#3674B5]"
-            />
-            <input
-              type="password"
-              placeholder="รหัสผ่านใหม่"
-              name="newPassword"
-              value={passwordForm.newPassword}
-              onChange={handlePasswordChangeInput}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#3674B5] focus:border-[#3674B5]"
-            />
-            <input
-              type="password"
-              placeholder="ยืนยันรหัสผ่านใหม่"
-              name="confirmPassword"
-              value={passwordForm.confirmPassword}
-              onChange={handlePasswordChangeInput}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#3674B5] focus:border-[#3674B5]"
-            />
-            <button
-              type="submit"
-              className="px-4 py-2 bg-[#3674B5] text-white rounded-lg hover:bg-[#2a5b8e] cursor-pointer"
-            >
-              เปลี่ยนรหัสผ่าน
-            </button>
-          </form>
-        </div>
-        <div>
-          <button
-            onClick={handleDeleteAccount}
-            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 cursor-pointer"
-          >
-            ลบบัญชีผู้ใช้
-          </button>
-        </div>
-      </div>
+    <div>
+      <h3 className="text-xl font-semibold mb-4">ข้อมูลโปรไฟล์</h3>
+      <p><strong>ชื่อ:</strong> {profileData.firstName} {profileData.lastName}</p>
+      <p><strong>Email:</strong> {profileData.email}</p>
+      <button
+        className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
+        onClick={() => setIsEditing(true)}
+      >
+        แก้ไขโปรไฟล์
+      </button>
     </div>
   );
 
-  // ฟอร์มแก้ไขโปรไฟล์
   const renderProfileEdit = () => (
-    <form onSubmit={handleSaveProfile} className="space-y-8">
-      <div>
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-xl font-semibold">แก้ไขโปรไฟล์</h3>
-          <div className="space-x-2">
-            <button
-              type="button"
-              onClick={() => setIsEditing(false)}
-              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 cursor-pointer"
-            >
-              ยกเลิก
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-[#3674B5] text-white rounded-lg hover:bg-[#2a5b8e] cursor-pointer"
-            >
-              บันทึก
-            </button>
-          </div>
-        </div>
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">รูปโปรไฟล์</label>
-          <div className="flex items-center space-x-4">
-            <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-200">
-              {profileData.profilePictureUrl ? (
-                <img src={profileData.profilePictureUrl} alt="Profile" className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-gray-400">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                </div>
-              )}
-            </div>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleProfilePictureChange}
-              className="hidden"
-              id="profile-picture"
-            />
-            <label
-              htmlFor="profile-picture"
-              className="px-4 py-2 bg-[#3674B5] text-white rounded-lg hover:bg-[#2a5b8e] cursor-pointer"
-            >
-              เปลี่ยนรูปโปรไฟล์
-            </label>
-          </div>
-        </div>
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">ชื่อ</label>
-            <input
-              type="text"
-              name="firstName"
-              value={profileData.firstName}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#3674B5] focus:border-[#3674B5]"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">นามสกุล</label>
-            <input
-              type="text"
-              name="lastName"
-              value={profileData.lastName}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#3674B5] focus:border-[#3674B5]"
-            />
-          </div>
-        </div>
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">ชื่อผู้ใช้</label>
-          <input
-            type="text"
-            name="username"
-            value={profileData.username}
-            onChange={handleInputChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#3674B5] focus:border-[#3674B5]"
-          />
-        </div>
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">อีเมล</label>
-          <input
-            type="email"
-            name="email"
-            value={profileData.email}
-            onChange={handleInputChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-[#3674B5] focus:border-[#3674B5]"
-          />
-        </div>
+    <form onSubmit={handleSaveProfile}>
+      <h3 className="text-xl font-semibold mb-4">แก้ไขโปรไฟล์</h3>
+      <div className="mb-4">
+        <label className="block">ชื่อ</label>
+        <input
+          type="text"
+          name="firstName"
+          value={profileData.firstName}
+          onChange={handleInputChange}
+          className="border rounded w-full p-2"
+        />
+      </div>
+      <div className="mb-4">
+        <label className="block">นามสกุล</label>
+        <input
+          type="text"
+          name="lastName"
+          value={profileData.lastName}
+          onChange={handleInputChange}
+          className="border rounded w-full p-2"
+        />
+      </div>
+      <div className="mb-4">
+        <label className="block">Email</label>
+        <input
+          type="email"
+          name="email"
+          value={profileData.email}
+          onChange={handleInputChange}
+          className="border rounded w-full p-2"
+        />
+      </div>
+      <div className="flex space-x-4">
+        <button type="submit" className="px-4 py-2 bg-green-500 text-white rounded">
+          บันทึก
+        </button>
+        <button type="button" className="px-4 py-2 bg-gray-300 text-black rounded" onClick={() => setIsEditing(false)}>
+          ยกเลิก
+        </button>
       </div>
     </form>
   );
 
-  // ----------------- MAIN RETURN -----------------
+  const renderTravelPlans = () => (
+    <div>
+      <h3 className="text-xl font-semibold mb-6">แผนท่องเที่ยวของฉัน</h3>
+      {loadingPlans ? (
+        <p className="text-gray-500">กำลังโหลดแผนท่องเที่ยว...</p>
+      ) : userPlans.length === 0 ? (
+        <p className="text-gray-500">คุณยังไม่มีแผนท่องเที่ยว</p>
+      ) : (
+        <ul className="space-y-4">
+          {userPlans.map((plan) => (
+            <li key={plan.id} className="border rounded-lg p-4 flex justify-between items-center">
+              <div>
+                <h4 className="text-lg font-semibold">{plan.name}</h4>
+                <p className="text-sm text-gray-500">{plan.note}</p>
+              </div>
+              <button
+                onClick={() => handleDeletePlan(plan.id)}
+                className="text-red-500 hover:underline"
+              >
+                ลบ
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+
+  const renderFavorites = () => (
+    <div>
+      <h3 className="text-xl font-semibold mb-6">แหล่งท่องเที่ยวโปรด</h3>
+      {loadingFavorites ? (
+        <p className="text-gray-500">กำลังโหลดข้อมูล...</p>
+      ) : favoriteList.length === 0 ? (
+        <p className="text-gray-500">คุณยังไม่มีสถานที่โปรด</p>
+      ) : (
+        <ul className="space-y-4">
+          {favoriteList.map((place) => (
+            <li key={place.id} className="border rounded-lg p-4 flex justify-between items-center">
+              <div>
+                <h4 className="text-lg font-semibold">{place.name}</h4>
+                <p className="text-sm text-gray-500">{place.province}</p>
+                <p className="text-sm text-gray-600">{place.description}</p>
+              </div>
+              <button
+                onClick={() => {
+                  setFavoriteList(prev => prev.filter(item => item.id !== place.id));
+                }}
+                className="text-red-500 hover:underline"
+              >
+                ลบออก
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+
   return (
     <div className="flex h-screen bg-gray-100">
-      {/* Sidebar */}
       <div className="w-64 bg-white shadow-lg flex flex-col justify-between h-full">
         <div className="p-4">
           <div className="flex justify-center mb-8 m-8">
@@ -353,32 +329,13 @@ const UserDashboard = () => {
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="flex-1 p-8 overflow-y-auto">
         <div className="bg-white rounded-lg shadow-md p-6">
           {activeMenu === 'profile' && (
             isEditing ? renderProfileEdit() : renderProfileView()
           )}
-          {activeMenu === 'favorites' && (
-            <div>
-              <h3 className="text-xl font-semibold mb-4">แหล่งท่องเที่ยวโปรด</h3>
-              <p className="text-gray-600">[รอเชื่อม backend จริง]</p>
-            </div>
-          )}
-          {activeMenu === 'travel-plans' && (
-            <div>
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-semibold">แผนท่องเที่ยวของฉัน</h3>
-                <Link to="/create-plan" className="px-4 py-2 bg-[#3674B5] text-white rounded-lg hover:bg-[#3674B5]/90 flex items-center space-x-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                  <span>สร้างแผนท่องเที่ยวใหม่</span>
-                </Link>
-              </div>
-              <p className="text-gray-600">[รอเชื่อม backend จริง]</p>
-            </div>
-          )}
+          {activeMenu === 'favorites' && renderFavorites()}
+          {activeMenu === 'travel-plans' && renderTravelPlans()}
         </div>
       </div>
     </div>

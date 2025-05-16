@@ -33,11 +33,13 @@ export const authService = {
 };
 
 export const placeService = {
-  getAllPlaces: () => api.get('/places'),
+  getAllPlaces: (params) => api.get('/places', { params }),
   getPlaceById: (id) => api.get(`/places/${id}`),
   getPlacesByProvince: (provinceId) => api.get(`/places?province=${provinceId}`),
   getPlacesByCategory: (categoryId) => api.get(`/places?category=${categoryId}`),
   getRelatedPlaces: (placeId) => api.get(`/places/${placeId}/related`),
+  getNearbyPlaces: (lat, lng, radius) => api.get(`/places/nearby?lat=${lat}&lng=${lng}&radius=${radius || 5}`),
+  searchPlaces: (query) => api.get(`/places/search?query=${encodeURIComponent(query)}`),
 };
 
 export const planService = {
@@ -46,7 +48,7 @@ export const planService = {
   createPlan: (planData) => api.post('/plans', planData),
   updatePlan: (id, planData) => api.put(`/plans/${id}`, planData),
   deletePlan: (id) => api.delete(`/plans/${id}`),
-  generatePlan: (requestData) => api.post('/plans/generate', requestData),
+  getAllPublicPlans: (sort) => api.get(`/plans/public${sort ? `?sort=${sort}` : ''}`),
 };
 
 export const categoryService = {
@@ -66,6 +68,31 @@ export const userService = {
   getUserProfile: () => api.get('/user'),
   updateProfile: (userData) => api.put('/user', userData),
   changePassword: (passwordData) => api.put('/user/password', passwordData),
+};
+
+export const mapService = {
+  searchPlaces: (keyword, params) => 
+    api.get('/maps/places', { params: { keyword, ...params }}),
+    
+  getTouristPlacesByProvince: (province, category, limit) => 
+    api.get('/maps/tourist-places', { params: { province, category, limit }}),
+    
+  getPlaceDetails: (id) => 
+    api.get(`/maps/place/${id}`),
+  
+  getRoute: (origin, destination, mode) => 
+    api.get('/maps/route', { params: { origin, destination, mode }}),
+    
+  generatePlan: (province, categories, days) => 
+    api.get('/maps/generate-plan', { params: { province, categories, days }})
+};
+
+export const districtService = {
+  getDistrictsByProvince: (provinceId) => api.get(`/districts?provinceId=${provinceId}`),
+};
+
+export const subdistrictService = {
+  getSubdistrictsByDistrict: (districtId) => api.get(`/subdistricts?districtId=${districtId}`),
 };
 
 export default api;

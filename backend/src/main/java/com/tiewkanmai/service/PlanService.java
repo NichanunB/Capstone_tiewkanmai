@@ -160,6 +160,18 @@ public class PlanService {
         return false;
     }
 
+    public List<PlanResponse> getAllPlansPublic(String sort) {
+        List<Plan> plans;
+        if ("popular".equalsIgnoreCase(sort)) {
+            plans = planRepository.findAllOrderByFavAmountDesc();
+        } else if ("latest".equalsIgnoreCase(sort)) {
+            plans = planRepository.findAllOrderByCreatedDateDesc();
+        } else {
+            plans = planRepository.findAllPublic();
+        }
+        return plans.stream().map(this::convertToPlanResponse).collect(Collectors.toList());
+    }
+
     private PlanResponse convertToPlanResponse(Plan plan) {
         PlanResponse response = new PlanResponse();
         response.setId(plan.getId());

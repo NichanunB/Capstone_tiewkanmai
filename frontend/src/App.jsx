@@ -12,12 +12,14 @@ import TravelPlan from './components/TravelPlan';
 import UserDashboard from './pages/UserDashboard';
 import CreatePlanPage from './pages/CreatePlanPage';
 import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
         <Routes>
+          {/* เส้นทางสาธารณะ */}
           <Route path="/" element={<Home />} />
           <Route path="/search" element={<SearchResultPage />} />
           <Route path="/place/:id" element={<PlaceDetailPage />} />
@@ -26,8 +28,24 @@ function App() {
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/dashboard" element={<UserDashboard />} />
-          <Route path="/create-plan" element={<CreatePlanPage />} />
+          
+          {/* เส้นทางที่ต้องล็อกอิน */}
+          <Route 
+            path="/dashboard" 
+            element={
+              <ProtectedRoute>
+                <UserDashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/create-plan" 
+            element={
+              <ProtectedRoute>
+                <CreatePlanPage />
+              </ProtectedRoute>
+            } 
+          />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

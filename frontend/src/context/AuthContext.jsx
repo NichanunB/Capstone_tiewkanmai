@@ -65,8 +65,45 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const updateUserProfile = async (userData) => {
+    try {
+      const response = await userService.updateProfile(userData);
+      setUser(prev => ({ ...prev, ...response.data }));
+      return { success: true };
+    } catch (error) {
+      console.error("Update profile error:", error);
+      return {
+        success: false,
+        message: error.response?.data?.message || "การอัปเดตโปรไฟล์ล้มเหลว"
+      };
+    }
+  };
+
+  const changePassword = async (passwordData) => {
+    try {
+      const response = await userService.changePassword(passwordData);
+      return { success: true, message: response.data.message };
+    } catch (error) {
+      console.error("Change password error:", error);
+      return {
+        success: false,
+        message: error.response?.data?.message || "การเปลี่ยนรหัสผ่านล้มเหลว"
+      };
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+    <AuthContext.Provider 
+      value={{ 
+        user, 
+        login, 
+        register, 
+        logout, 
+        loading,
+        updateUserProfile,
+        changePassword 
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

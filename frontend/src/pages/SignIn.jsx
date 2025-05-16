@@ -1,25 +1,39 @@
+// src/pages/SignIn.jsx
 import { useState } from "react";
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export default function SignIn() {
-  const [email, setEmail] = useState(""); // เปลี่ยนจาก username เป็น email
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // ดึง redirectUrl จาก query parameter ถ้ามี (เช่น กรณีเข้าหน้าที่ต้องล็อกอิน)
+  const searchParams = new URLSearchParams(location.search);
+  const redirectUrl = searchParams.get('redirect') || '/';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setMessage("");
 
+    // ตรวจสอบข้อมูลเบื้องต้น
+    if (!email || !password) {
+      setMessage("กรุณากรอกอีเมลและรหัสผ่าน");
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const result = await login({ email, password });
       if (result.success) {
-        navigate(-1); // กลับไปหน้าก่อนหน้า
+        // Redirect ไปยัง URL ที่ถูกกำหนดไว้ หรือหน้าแรก
+        navigate(redirectUrl);
       } else {
         setMessage(result.message);
       }

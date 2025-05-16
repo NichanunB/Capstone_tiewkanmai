@@ -24,4 +24,16 @@ public interface PlanRepository extends JpaRepository<Plan, Long> {
     // ✅ ใช้เช็คว่า user มีสิทธิ์ในแผนนี้ไหม (ใช้ก่อน delete ก็ได้)
     @Query("SELECT COUNT(p) > 0 FROM Plan p JOIN p.users u WHERE u.id = :userId AND p.id = :planId")
     boolean existsByIdAndUserId(@Param("planId") Long planId, @Param("userId") Long userId);
+
+    // ดึงแผนทั้งหมด (public)
+    @Query("SELECT p FROM Plan p")
+    List<Plan> findAllPublic();
+
+    // เรียงตามยอดนิยม (จำนวน fav_amount มากสุด)
+    @Query("SELECT p FROM Plan p ORDER BY p.favAmount DESC")
+    List<Plan> findAllOrderByFavAmountDesc();
+
+    // เรียงตามล่าสุด (created_date ใหม่สุด)
+    @Query("SELECT p FROM Plan p ORDER BY p.createdDate DESC")
+    List<Plan> findAllOrderByCreatedDateDesc();
 } 

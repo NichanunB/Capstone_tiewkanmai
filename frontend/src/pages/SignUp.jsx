@@ -1,3 +1,4 @@
+// src/pages/SignUp.jsx
 import { useState } from "react";
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -10,13 +11,41 @@ export default function SignUp() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const { register } = useAuth();
   const navigate = useNavigate();
 
+  const validateEmail = (email) => {
+    // รูปแบบอีเมลที่ถูกต้อง (basic validation)
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
+  const validatePassword = (password) => {
+    // รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร
+    return password.length >= 6;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage("");
+    setIsSuccess(false);
+
+    // ตรวจสอบข้อมูลเบื้องต้น
+    if (!firstName || !lastName || !email || !password || !confirmPassword) {
+      setMessage("กรุณากรอกข้อมูลให้ครบทุกช่อง");
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      setMessage("รูปแบบอีเมลไม่ถูกต้อง");
+      return;
+    }
+
+    if (!validatePassword(password)) {
+      setMessage("รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร");
+      return;
+    }
 
     if (password !== confirmPassword) {
       setMessage("รหัสผ่านไม่ตรงกัน");
@@ -34,7 +63,8 @@ export default function SignUp() {
       });
 
       if (result.success) {
-        setMessage("สมัครสมาชิกสำเร็จ กำลังนำคุณไปยังหน้าเข้าสู่ระบบ");
+        setIsSuccess(true);
+        setMessage(result.message || "สมัครสมาชิกสำเร็จ กำลังนำคุณไปยังหน้าเข้าสู่ระบบ");
         setTimeout(() => navigate("/signin"), 2000);
       } else {
         setMessage(result.message);
@@ -94,7 +124,6 @@ export default function SignUp() {
             onChange={(e) => setPassword(e.target.value)}
             className="w-full px-3 py-2 mb-4 border rounded-lg"
             required
-            minLength={6}
           />
           <p className="text-sm text-left mb-2">ยืนยันรหัสผ่าน</p>
           <input
@@ -120,7 +149,7 @@ export default function SignUp() {
           </Link>
         </div>
         {message && (
-          <p className={`mt-4 text-center text-sm ${message.includes("สำเร็จ") ? "text-green-500" : "text-red-500"}`}>
+          <p className={`mt-4 text-center text-sm ${isSuccess ? "text-green-500" : "text-red-500"}`}>
             {message}
           </p>
         )}

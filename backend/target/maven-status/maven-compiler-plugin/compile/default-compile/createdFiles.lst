@@ -5,6 +5,7 @@ com/tiewkanmai/dto/request/PlanGenerateRequest.class
 com/tiewkanmai/dto/response/UserProfileResponse.class
 com/tiewkanmai/dto/response/TravelRecommendationResponse.class
 com/tiewkanmai/controller/AuthController.class
+com/tiewkanmai/controller/SubdistrictController.class
 com/tiewkanmai/repository/BudgetRepository.class
 com/tiewkanmai/model/Budget.class
 com/tiewkanmai/controller/PlaceController.class
@@ -35,15 +36,19 @@ com/tiewkanmai/repository/CategoryRepository.class
 com/tiewkanmai/model/Fav.class
 com/tiewkanmai/security/jwt/AuthTokenFilter.class
 com/tiewkanmai/dto/request/PlanSaveRequest.class
+com/tiewkanmai/model/Subdistrict.class
 com/tiewkanmai/service/AIPlaceRecommendationService.class
 com/tiewkanmai/security/services/UserDetailsImpl.class
 com/tiewkanmai/controller/UserController.class
 com/tiewkanmai/repository/RateRepository.class
+com/tiewkanmai/dto/request/PlaceRequest.class
 com/tiewkanmai/dto/response/JwtResponse.class
 com/tiewkanmai/service/UserService.class
 com/tiewkanmai/controller/DevController.class
+com/tiewkanmai/repository/SubdistrictRepository.class
 com/tiewkanmai/TiewkanmaiApplication.class
 com/tiewkanmai/controller/UserController$PasswordChangeRequest.class
+com/tiewkanmai/repository/DistrictRepository.class
 com/tiewkanmai/controller/RegionController.class
 com/tiewkanmai/dto/request/CreatePlanRequest.class
 com/tiewkanmai/service/PlanService.class
@@ -51,7 +56,9 @@ com/tiewkanmai/service/PlaceService.class
 com/tiewkanmai/config/AppConfig.class
 com/tiewkanmai/model/Category.class
 com/tiewkanmai/model/Plan.class
+com/tiewkanmai/model/District.class
 com/tiewkanmai/model/User.class
+com/tiewkanmai/controller/DistrictController.class
 com/tiewkanmai/security/jwt/AuthEntryPointJwt.class
 com/tiewkanmai/model/Place.class
 com/tiewkanmai/repository/FavRepository.class
