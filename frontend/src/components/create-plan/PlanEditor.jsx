@@ -4,6 +4,8 @@ import CoverImageBlock from "./CoverImageBlock";
 import BlockContainer from "./BlockContainer";
 import { v4 as uuidv4 } from "uuid";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { useAuth } from "../../context/AuthContext";
 
 const initialBlocks = [
   { id: uuidv4(), type: "notes", data: {} },
@@ -24,6 +26,7 @@ const PlanEditor = () => {
   const [coverImage, setCoverImage] = useState("");
   const [blocks, setBlocks] = useState(initialBlocks);
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const moveBlock = (from, to) => {
     const updated = [...blocks];
@@ -33,25 +36,59 @@ const PlanEditor = () => {
   };
 
   const handleBlockChange = (idx, data) => {
-    console.log("Block change:", { idx, data });
-    setBlocks(blocks => {
+    setBlocks((blocks) => {
       const updated = [...blocks];
       updated[idx] = { ...updated[idx], data };
-      console.log("Updated blocks:", updated);
       return updated;
     });
   };
 
-  const addBlock = type => {
-    setBlocks(blocks => [
+  const addBlock = (type) => {
+    setBlocks((blocks) => [
       ...blocks,
       { id: uuidv4(), type, data: {} },
     ]);
   };
 
-  const handleSave = () => {
-    // TODO: Implement save logic
-    alert("บันทึกแผนการเดินทางแล้ว!");
+  const handleSave = async () => {
+    if (!title || !title.trim()) {
+      alert("กรุณากรอกชื่อแผนท่องเที่ยว");
+      return;
+    }
+
+    if (!user || !user.token) {
+      alert("ยังไม่ได้เข้าสู่ระบบ");
+      return;
+    }
+
+    console.log("🚀 DATA ที่จะส่งไป backend:");
+    console.log("title:", title);
+    console.log("coverImage:", coverImage);
+    console.log("jsonData:", JSON.stringify(blocks));
+
+    try {
+      await axios.post(
+        "http://localhost:8080/api/plans",
+        {
+          title: title.trim(),
+          coverImage: coverImage || null,
+          note: "",
+          jsonData: JSON.stringify(blocks),
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      alert("บันทึกแผนการเดินทางเรียบร้อยแล้ว!");
+      navigate("/dashboard?reload=plans");
+    } catch (error) {
+      console.error("❌ Save plan failed:", error.response?.data || error.message);
+      alert("เกิดข้อผิดพลาดในการบันทึกแผน");
+    }
   };
 
   const handleDiscard = () => {
@@ -63,10 +100,14 @@ const PlanEditor = () => {
       <div className="m-4 relative">
         <CoverImageBlock imageUrl={coverImage} onChange={setCoverImage} />
         <TitleBlock title={title} onChange={setTitle} />
-        <BlockContainer blocks={blocks} moveBlock={moveBlock} onBlockChange={handleBlockChange} />
+        <BlockContainer
+          blocks={blocks}
+          moveBlock={moveBlock}
+          onBlockChange={handleBlockChange}
+        />
         <div className="mt-6 flex justify-between items-end">
           <div className="flex gap-2">
-            {blockTypes.map(bt => (
+            {blockTypes.map((bt) => (
               <button
                 key={bt.type}
                 className="px-4 py-2 text-white rounded-lg bg-[#3674b5] hover:bg-[#2a5b8e]"

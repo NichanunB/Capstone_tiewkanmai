@@ -12,4 +12,4 @@ const TitleBlock = ({ title, onChange }) => (
   </div>
 );
 
-export default TitleBlock; 
+export default TitleBlock;

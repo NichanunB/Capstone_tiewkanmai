@@ -4,66 +4,32 @@ import java.time.LocalDateTime;
 
 public class PlanResponse {
     private Long id;
-    private String name;
-    private String img;
+    private String title;         // <-- ชื่อแผน (เดิมชื่อ name)
+    private String coverImage;    // <-- รูปปก (เดิมชื่อ img)
     private LocalDateTime createdDate;
     private Integer favAmount;
     private String note;
-    private String jsonData;
+    private String jsonData;      // <-- blocks (JSON)
 
-    public Long getId() {
-        return id;
-    }
+    // --- getter/setter ทุก field ---
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
 
-    public String getName() {
-        return name;
-    }
+    public String getCoverImage() { return coverImage; }
+    public void setCoverImage(String coverImage) { this.coverImage = coverImage; }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+    public LocalDateTime getCreatedDate() { return createdDate; }
+    public void setCreatedDate(LocalDateTime createdDate) { this.createdDate = createdDate; }
 
-    public String getImg() {
-        return img;
-    }
+    public Integer getFavAmount() { return favAmount; }
+    public void setFavAmount(Integer favAmount) { this.favAmount = favAmount; }
 
-    public void setImg(String img) {
-        this.img = img;
-    }
+    public String getNote() { return note; }
+    public void setNote(String note) { this.note = note; }
 
-    public LocalDateTime getCreatedDate() {
-        return createdDate;
-    }
-
-    public void setCreatedDate(LocalDateTime createdDate) {
-        this.createdDate = createdDate;
-    }
-
-    public Integer getFavAmount() {
-        return favAmount;
-    }
-
-    public void setFavAmount(Integer favAmount) {
-        this.favAmount = favAmount;
-    }
-
-    public String getNote() {
-        return note;
-    }
-
-    public void setNote(String note) {
-        this.note = note;
-    }
-
-    public String getJsonData() {
-        return jsonData;
-    }
-
-    public void setJsonData(String jsonData) {
-        this.jsonData = jsonData;
-    }
+    public String getJsonData() { return jsonData; }
+    public void setJsonData(String jsonData) { this.jsonData = jsonData; }
 }

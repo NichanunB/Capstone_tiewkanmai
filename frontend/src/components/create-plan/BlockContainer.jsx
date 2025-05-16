@@ -28,4 +28,4 @@ const BlockContainer = ({ blocks, moveBlock, onBlockChange }) => {
   );
 };
 
-export default BlockContainer; 
+export default BlockContainer;

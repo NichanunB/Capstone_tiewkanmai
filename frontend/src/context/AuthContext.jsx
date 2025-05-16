@@ -8,15 +8,15 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // ตรวจสอบ token ใน localStorage เมื่อโหลดหน้าเว็บ
+  // โหลด token และข้อมูล user จาก localStorage
   useEffect(() => {
     const checkToken = async () => {
       const token = localStorage.getItem('token');
       if (token) {
         try {
-          // ดึงข้อมูลผู้ใช้จาก token
           const response = await userService.getUserProfile();
-          setUser(response.data);
+          const userData = response.data;
+          setUser({ ...userData, token }); // ✅ ใส่ token เข้าไปด้วย
         } catch (error) {
           console.error("Token invalid:", error);
           localStorage.removeItem('token');
@@ -32,16 +32,17 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await authService.login(credentials);
       const { accessToken, id, firstName, lastName, email } = response.data;
-      
+
       localStorage.setItem('token', accessToken);
-      setUser({ id, firstName, lastName, email });
-      
+      const userData = { id, firstName, lastName, email, token: accessToken };
+      setUser(userData);
+
       return { success: true };
     } catch (error) {
       console.error("Login error:", error);
-      return { 
-        success: false, 
-        message: error.response?.data?.message || "การเข้าสู่ระบบล้มเหลว" 
+      return {
+        success: false,
+        message: error.response?.data?.message || "การเข้าสู่ระบบล้มเหลว"
       };
     }
   };
@@ -52,9 +53,9 @@ export const AuthProvider = ({ children }) => {
       return { success: true, message: response.data.message };
     } catch (error) {
       console.error("Registration error:", error);
-      return { 
-        success: false, 
-        message: error.response?.data?.message || "การสมัครสมาชิกล้มเหลว" 
+      return {
+        success: false,
+        message: error.response?.data?.message || "การสมัครสมาชิกล้มเหลว"
       };
     }
   };

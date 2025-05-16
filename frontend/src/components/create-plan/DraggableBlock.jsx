@@ -1,6 +1,6 @@
 import React from "react";
 
-const DraggableBlock = ({ id, index, moveBlock, children }) => {
+const DraggableBlock = ({ index, moveBlock, children }) => {
   const handleDragStart = (e) => {
     e.dataTransfer.setData("blockIndex", index);
   };
@@ -30,4 +30,4 @@ const DraggableBlock = ({ id, index, moveBlock, children }) => {
   );
 };
 
-export default DraggableBlock; 
+export default DraggableBlock;

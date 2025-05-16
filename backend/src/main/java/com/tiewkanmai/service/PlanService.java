@@ -91,8 +91,8 @@ public class PlanService {
             User user = userOpt.get();
 
             Plan plan = new Plan();
-            plan.setName(request.getName());
-            plan.setImg(request.getImg());
+            plan.setName(request.getTitle());               // ใช้ title
+            plan.setImg(request.getCoverImage());           // ใช้ coverImage
             plan.setCreatedDate(LocalDateTime.now());
             plan.setFavAmount(0);
             plan.setNote(request.getNote());
@@ -134,8 +134,8 @@ public class PlanService {
         if (!planOpt.isPresent()) return null;
 
         Plan plan = planOpt.get();
-        plan.setName(request.getName());
-        if (request.getImg() != null) plan.setImg(request.getImg());
+        plan.setName(request.getTitle());               // ใช้ title
+        if (request.getCoverImage() != null) plan.setImg(request.getCoverImage()); // ใช้ coverImage
         if (request.getNote() != null) plan.setNote(request.getNote());
         plan.setJsonData(request.getJsonData());
 
@@ -163,8 +163,8 @@ public class PlanService {
     private PlanResponse convertToPlanResponse(Plan plan) {
         PlanResponse response = new PlanResponse();
         response.setId(plan.getId());
-        response.setName(plan.getName());
-        response.setImg(plan.getImg());
+        response.setTitle(plan.getName());             // ใช้ title
+        response.setCoverImage(plan.getImg());         // ใช้ coverImage
         response.setCreatedDate(plan.getCreatedDate());
         response.setFavAmount(plan.getFavAmount());
         response.setNote(plan.getNote());

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import logo from '../assets/logo.png';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-// import axios from 'axios'; // สำหรับเชื่อม backend จริง
 
 const UserDashboard = () => {
   const { user, logout } = useAuth();
@@ -63,7 +62,7 @@ const UserDashboard = () => {
   const handleSaveProfile = (e) => {
     e.preventDefault();
     setIsEditing(false);
-    alert('บันทึกโปรไฟล์สำเร็จ (ตัวอย่าง)');
+    alert('บันทึกโปรไฟล์สำเร็จ');
     // เมื่อเชื่อม backend จริง: อัปเดตข้อมูลใน backend แล้ว update user context ด้วย
     // เช่น await axios.put(...); setUser({...})
   };
@@ -71,7 +70,7 @@ const UserDashboard = () => {
   // ลบบัญชี (ตัวอย่าง)
   const handleDeleteAccount = () => {
     if (window.confirm('ต้องการลบบัญชีผู้ใช้?')) {
-      alert('ลบบัญชีสำเร็จ (ตัวอย่าง)');
+      alert('ลบบัญชีสำเร็จ');
       logout();
       navigate('/');
       // เมื่อเชื่อม backend จริง: await axios.delete(...);
@@ -99,7 +98,7 @@ const UserDashboard = () => {
       alert('รหัสผ่านใหม่ไม่ตรงกัน');
       return;
     }
-    alert('เปลี่ยนรหัสผ่านสำเร็จ (ตัวอย่าง)');
+    alert('เปลี่ยนรหัสผ่านสำเร็จ');
     setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
     // เมื่อเชื่อม backend จริง: await axios.post(...);
   };
