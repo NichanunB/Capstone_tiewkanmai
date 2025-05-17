@@ -70,7 +70,7 @@ function TravelPlanSection({ plans = [], loading = false }) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {displayPlans.map((plan) => (
-          <Link to={`/shared-travel-plan/${plan.id}`} key={plan.id}>
+          <Link to={`/my-travel-plan/${plan.id}`} key={plan.id}>
             <Card
               image={plan.coverImage || plan.img || "https://placehold.co/600x400?text=Plan"}
               title={plan.title || plan.name}
