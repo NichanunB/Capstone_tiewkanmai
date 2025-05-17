@@ -6,7 +6,7 @@ import Footer from '../components/Footer';
 // import TitleBlock from '../components/create-plan/TitleBlock';
 // import CoverImageBlock from '../components/create-plan/CoverImageBlock';
 // import BlockRenderer from '../components/create-plan/BlockRenderer'; // สมมติว่ามี component นี้ไว้วาด block
-import { MOCK_PLANS, MOCK_ATTRACTIONS } from '../mockData/mockData'; // ✅ import MOCK_PLANS และ MOCK_ATTRACTIONS
+import { planService } from '../services/api'; // ✅ import planService
 
 const UserPlanDetailPage = () => {
   const { id } = useParams(); // ดึง id จาก URL
@@ -17,27 +17,60 @@ const UserPlanDetailPage = () => {
   useEffect(() => {
     setLoading(true);
     setError(null);
-    try {
-      let foundPlan = null;
+    
+    const fetchPlan = async () => {
+       try {
+           // ✅ เรียก API เพื่อดึงข้อมูลแผนของผู้ใช้ตาม ID
+           const response = await planService.getUserPlanById(id); 
+         
+           // ตรวจสอบว่า response มีข้อมูลและเป็น object
+           if (response && response.data) {
+              let planData = response.data;
+              // ตรวจสอบและแปลง jsonData ถ้าเป็น string
+              if (typeof planData.jsonData === 'string') {
+                 try {
+                    planData.jsonData = JSON.parse(planData.jsonData);
+                    console.log("Parsed jsonData:", planData.jsonData); // Log parsed data
+                 } catch (parseError) {
+                    console.error('Error parsing jsonData:', parseError);
+                    // จัดการ error หรือตั้งค่า jsonData เป็น null หรือ object ว่างตามเหมาะสม
+                    planData.jsonData = null; // ตั้งค่าเป็น null หาก parse ไม่ได้
+                    setError("ไม่สามารถแสดงรายละเอียดแผนท่องเที่ยวได้: รูปแบบข้อมูลภายในไม่ถูกต้อง");
+                 }
+              }
+              // ตรวจสอบโครงสร้างข้อมูลหลักก่อนตั้งค่า state
+              if (planData.title || planData.name || (planData.jsonData && Array.isArray(planData.jsonData))) {
+                 setPlan(planData);
+                 console.log("Set plan data:", planData); // เพิ่มบรรทัดนี้เพื่อ log ข้อมูล
+              } else {
+                 console.warn("API returned data but structure is unexpected:", planData);
+                 setPlan(null);
+                 setError("ไม่พบข้อมูลแผนท่องเที่ยวหรือข้อมูลไม่สมบูรณ์");
+              }
 
-      // ลองดึงข้อมูลจาก MOCK_PLANS ก่อน (สำหรับแผนเที่ยวคนอื่น)
-      // ต้อง import MOCK_PLANS เข้ามาในไฟล์นี้ด้วย
-      foundPlan = MOCK_PLANS.find(p => String(p.id) === String(id));
+           } else {
+             // กรณี API ไม่ได้ return ค่าที่คาดหวัง
+             console.warn("API did not return expected data for plan detail:", response);
+             setPlan(null); // ตั้งค่าเป็น null หรือจัดการ error ตามเหมาะสม
+             setError("ไม่สามารถโหลดข้อมูลแผนท่องเที่ยวของคุณได้: ไม่พบข้อมูลหรือรูปแบบไม่ถูกต้องจากเซิร์ฟเวอร์");
+           }
+         
+       } catch (err) {
+           console.error('ไม่สามารถโหลดข้อมูลแผน:', err);
+           // ตรวจสอบ status code ของ error ถ้าเป็น 404 (Not Found) แสดงว่าไม่พบแผน
+           if (err.response && err.response.status === 404) {
+              setError("ไม่พบแผนท่องเที่ยวที่คุณกำลังค้นหา");
+           } else {
+              setError('ไม่สามารถโหลดข้อมูลแผนได้ กรุณาลองใหม่ภายหลัง');
+           }
+           setPlan(null);
+       } finally {
+           setLoading(false);
+       }
+    };
+    
+    fetchPlan();
 
-      // ถ้าไม่เจอใน MOCK_PLANS ให้ลองดึงจาก localStorage (สำหรับแผนของผู้ใช้เอง)
-      if (!foundPlan) {
-        const userPlans = JSON.parse(localStorage.getItem('userPlans') || '[]');
-        foundPlan = userPlans.find(p => String(p.id) === String(id));
-      }
-      
-      setPlan(foundPlan || null);
-
-    } catch (err) {
-      console.error('ไม่สามารถโหลดข้อมูลแผน:', err);
-      setError('ไม่สามารถโหลดข้อมูลแผนได้');
-    } finally {
-      setLoading(false);
-    }
   }, [id]);
 
   if (loading) {
@@ -103,34 +136,94 @@ const UserPlanDetailPage = () => {
         {/* แสดง block ต่างๆ จาก jsonData */}
         <div className="mt-4">
             <h2 className="text-2xl font-bold mb-4">รายละเอียดแผน</h2>
-             {/* ตรวจสอบว่า plan.jsonData มีค่าและเป็น string ก่อน parse */}
-             {plan.jsonData && typeof plan.jsonData === 'string' && JSON.parse(plan.jsonData).map((dayBlock, index) => (
-                <div key={index} className="mb-6 border-b pb-4">
-                    <h3 className="text-xl font-semibold mb-3">วันที่ {dayBlock.day}</h3>
-                     {/* ตรวจสอบว่า dayBlock.places เป็น array และมีข้อมูลก่อน map */}
-                     {Array.isArray(dayBlock.places) && dayBlock.places.length > 0 ? (
-                        <ul className="list-disc list-inside ml-4">
-                            {dayBlock.places.map((placeItem, placeIndex) => {
-                                 // ค้นหาชื่อสถานที่จาก MOCK_ATTRACTIONS โดยใช้ placeItem.id
-                                 const attraction = MOCK_ATTRACTIONS.find(attr => attr.id === placeItem.id);
-                                 const placeName = attraction ? (attraction.name || attraction.title) : (placeItem.name || 'ไม่พบชื่อสถานที่');
+             {/* ตรวจสอบว่า plan.jsonData มีค่าและเป็น array ก่อน map */}
+             {plan.jsonData && Array.isArray(plan.jsonData) && plan.jsonData.length > 0 ? (
+                plan.jsonData.map((block, index) => {
+                // ตรวจสอบ type ของ block และแสดงผลตามนั้น
+                // ปรับปรุง logic การแสดงผลให้รองรับโครงสร้างข้อมูลจากหน้าสร้างแผน
+                if (block.type === 'note' && block.data?.text) { // สมมติว่าโน้ตถูกเก็บเป็น block type 'note'
+                    return (
+                        <div key={index} className="mb-4 border-b pb-4 last:border-b-0 last:pb-0">
+                            <h3 className="text-xl font-semibold mb-2">โน้ต</h3>
+                            <p className="text-gray-700 text-sm">{block.data.text}</p>
+                        </div>
+                    );
+                 } else if (block.type === 'location' && block.data?.name) { // สมมติว่าสถานที่ถูกเก็บเป็น block type 'location'
+                     return (
+                         <div key={index} className="mb-4 border-b pb-4 last:border-b-0 last:pb-0">
+                            <h3 className="text-xl font-semibold mb-2">สถานที่</h3>
+                             <p className="text-gray-700 text-sm">{block.data.name}</p>
+                         </div>
+                     );
+                 } else if (block.type === 'item' && block.data?.text) { // สมมติว่ารายการถูกเก็บเป็น block type 'item'
+                     return (
+                         <div key={index} className="mb-4 border-b pb-4 last:border-b-0 last:pb-0">
+                            <h3 className="text-xl font-semibold mb-2">รายการ</h3>
+                             <p className="text-gray-700 text-sm">{block.data.text}</p>
+                         </div>
+                     );
+                 } else if (block.type === 'budgetItem' && block.data?.item && block.data?.amount) { // สมมติว่างบประมาณถูกเก็บเป็น block type 'budgetItem'
+                      return (
+                         <div key={index} className="mb-4 border-b pb-4 last:border-b-0 last:pb-0">
+                            <h3 className="text-xl font-semibold mb-2">รายการงบประมาณ</h3>
+                             <p className="text-gray-700 text-sm">{block.data.item}: {block.data.amount} THB</p>
+                         </div>
+                      );
+                 } else if (block.type === 'budgetSummary' && block.data?.totalBudget) { // รองรับ block budgetSummary เดิมด้วย
+                    return (
+                       <div key={index} className="mb-6 border-t pt-4">
+                            <h3 className="text-xl font-semibold mb-3">สรุปงบประมาณ</h3>
+                            <p className="text-lg font-bold text-green-700">รวม: {block.data.totalBudget} THB</p>
+                            {block.data.foodBudget && <p className="text-gray-700">อาหาร: {block.data.foodBudget} THB</p>}
+                            {block.data.travelBudget && <p className="text-gray-700">เดินทาง: {block.data.travelBudget} THB</p>}
+                            {/* แสดงรายการงบประมาณย่อยอื่นๆ ได้ที่นี่ */}
+                       </div>
+                    );
+                 } else if (block.type === 'day' && block.data?.day) { // รองรับ block day เดิมด้วย
+                   return (
+                      <div key={index} className="mb-6 border-b pb-4">
+                           {/* แสดงหัวข้อวัน หรือข้อมูลอื่นๆ ที่ระดับวัน */}
+                          <h3 className="text-xl font-semibold mb-3">วันที่ {block.data.day}</h3>
+                            {/* แสดงสถานที่ในวันนี้ */}
+                           {Array.isArray(block.data.places) && block.data.places.length > 0 ? (
+                                <ul className="list-disc list-inside ml-4">
+                                    {block.data.places.map((placeItem, placeIndex) => {
+                                         // ดึงข้อมูลจาก placeItem
+                                         const placeName = placeItem.name || 'ไม่พบชื่อสถานที่';
+                                         const placeBudget = placeItem.budget; // สมมติมี field budget
+                                         const placeNote = placeItem.note; // สมมติมี field note
 
-                                return (
-                                    <li key={placeIndex} className="mb-2 text-gray-700">
-                                        {/* สามารถเพิ่ม icon หน้าชื่อสถานที่ได้ */}
-                                        {/* <svg className="inline-block h-4 w-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.828 0L6.343 16.657a4.998 4.998 0 010-7.07m.002 7.07l7.07-7.07A4.998 4.998 0 0017.656 9.58a4.998 4.998 0 00-7.07-7.07L6.344 9.58a4.997 4.997 0 000 7.07zM15.707 10.293a1 1 0 11-1.414-1.414L15.707 10.293z"></path></svg> */}
-                                        {placeName}
-                                         {/* สามารถเพิ่มเวลาเข้าชมหรือข้อมูลย่อๆ ได้ถ้ามีใน placeItem หรือ jsonData */}
-                                         {/* {placeItem.visitDuration && <span className="text-gray-500 text-sm ml-2">({placeItem.visitDuration} ชม.)</span>} */}
-                                    </li>
-                                );
-                            })} 
-                        </ul>
-                     ) : (
-                        <p className="text-gray-600 text-sm">ไม่มีสถานที่ในวันนี้</p>
-                     )}
-                </div>
-             ))}
+                                        return (
+                                            <li key={placeIndex} className="mb-2 text-gray-700">
+                                                 {/* แสดงชื่อสถานที่ */}
+                                                <strong className="text-gray-800">{placeName}</strong>
+                                                 {/* แสดงงบประมาณต่อสถานที่ (ถ้ามี) */}
+                                                {placeBudget && <span className="text-gray-600 text-sm ml-2">(งบประมาณ: {placeBudget} THB)</span>}
+                                                 {/* แสดงโน้ตต่อสถานที่ (ถ้ามี) */}
+                                                {placeNote && <p className="text-gray-600 text-sm mt-1 italic">โน้ต: {placeNote}</p>}
+                                            </li>
+                                        );
+                                    })} 
+                                </ul>
+                            ) : (
+                                <p className="text-gray-600 text-sm">ไม่มีสถานที่ในวันนี้</p>
+                            )}
+                         {/* แสดงข้อมูลอื่นๆ ที่ระดับวัน ถ้ามี เช่น โน้ตรวมของวันนี้ */}
+                         {block.data.dayNote && (
+                            <div className="mt-4 p-3 bg-gray-50 rounded-md text-gray-700 text-sm">
+                                <p className="font-semibold mb-1">โน้ตประจำวัน:</p>
+                                <p>{block.data.dayNote}</p>
+                            </div>
+                         )}
+                      </div>
+                   );
+                }
+                 // สามารถเพิ่ม block type อื่นๆ ได้ที่นี่ หากโครงสร้าง jsonData แตกต่างไปจากที่คาดการณ์
+                console.warn("Unknown block type or structure:", block); // Log block ที่ไม่รู้จัก
+                return null; // ไม่แสดง block type ที่ไม่รู้จัก
+             })) : (
+                <p className="text-gray-600 text-sm">ไม่พบรายละเอียดเพิ่มเติมสำหรับแผนนี้</p>
+             )}
         </div>
 
       </div>

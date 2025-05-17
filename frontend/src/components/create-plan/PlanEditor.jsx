@@ -5,7 +5,8 @@ import BlockContainer from "./BlockContainer";
 import { v4 as uuidv4 } from "uuid";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import services from "../../services/api"; // ✅ ใช้ default export
+import axios from "axios"; // Import axios directly for emergency fallback
+import services from "../../services/api";
 const { planService } = services;
 
 const initialBlocks = [
@@ -80,81 +81,93 @@ const PlanEditor = () => {
     ]);
   };
 
+  // Emergency fallback direct API call function
+  const emergencySavePlan = async () => {
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+      const token = localStorage.getItem('token');
+      
+      // Create a clean string copy of the data
+      const blocksStringified = JSON.stringify(blocks);
+      
+      // Prepare emergency data
+      const emergencyData = {
+        title: title.trim(),
+        coverImage: coverImage || null,
+        note: "",
+        // Use a string for jsonData
+        jsonData: blocksStringified
+      };
+      
+      console.log("🚨 EMERGENCY SAVE ATTEMPT with stringified data:", emergencyData);
+      
+      const response = await axios.post(`${API_URL}/plans`, emergencyData, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      console.log("Emergency save response:", response);
+      return response;
+    } catch (error) {
+      console.error("Emergency save failed:", error);
+      throw error;
+    }
+  };
+
   const handleSave = async () => {
     if (!title || !title.trim()) {
       setError("กรุณากรอกชื่อแผนท่องเที่ยว");
-      setIsSaving(false);
       return;
     }
 
     if (!blocks || blocks.length === 0) {
       setError("กรุณาเพิ่มอย่างน้อย 1 block");
-      setIsSaving(false);
       return;
     }
 
     setIsSaving(true);
     setError("");
 
-    const planDataForApi = {
-      title: title.trim(),
-      coverImage: coverImage || null,
-      note: "",
-      jsonData: blocks, // ✅ ส่งแบบ object
-    };
-
-    console.log("กำลังส่งข้อมูลไป backend:", planDataForApi);
-
     try {
-      const userPlans = JSON.parse(localStorage.getItem('tempPlans') || '[]');
-      const planDataForLocal = {
-        id: Date.now(),
+      // สร้างข้อมูลแผนเที่ยว
+      const planData = {
         title: title.trim(),
         coverImage: coverImage || null,
         note: "",
-        jsonData: blocks,
-        createdAt: new Date().toISOString(),
-        author: user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : 'ผู้ใช้',
-        likes: 0
+        jsonData: JSON.stringify(blocks),
+        isPublic: true,
+        status: "active"
       };
-      userPlans.push(planDataForLocal);
 
-      try {
-        localStorage.setItem('tempPlans', JSON.stringify(userPlans));
-      } catch (e) {
-        if (e.name === 'QuotaExceededError') {
-          setError("พื้นที่การเก็บข้อมูลแผนชั่วคราวเต็ม กรุณาลบแผนเก่าออกก่อน");
-          console.error("LocalStorage เต็ม", e);
-          setIsSaving(false);
-          return;
-        }
+      console.log("Sending planData to API:", planData);
+
+      // บันทึกลง API
+      const response = await planService.createPlan(planData);
+      
+      if (response.data) {
+        // บันทึกลง localStorage เป็นสำเนา
+        const userPlans = JSON.parse(localStorage.getItem('userPlans') || '[]');
+        userPlans.push({
+          ...response.data,
+          isLocalCopy: true
+        });
+        localStorage.setItem('userPlans', JSON.stringify(userPlans));
+
+        alert("บันทึกแผนการเดินทางเรียบร้อยแล้ว!");
+        navigate("/dashboard?reload=plans");
       }
-
-      const response = await planService.createPlan(planDataForApi);
-      console.log("Response from backend:", response);
-
-      alert("บันทึกแผนการเดินทางเรียบร้อยแล้ว!");
-      navigate("/dashboard?reload=plans");
     } catch (error) {
       console.error("Error saving plan:", error);
-      console.error("Error details:", {
-        status: error.response?.status,
-        data: error.response?.data,
-        message: error.message
-      });
-
-      if (error.response?.status === 400) {
-        setError("ข้อมูลไม่ถูกต้อง: " + (error.response.data?.message || "กรุณาตรวจสอบข้อมูลอีกครั้ง"));
-      } else {
-        setError("เกิดข้อผิดพลาดในการบันทึกแผน: " + (error.response?.data?.message || "กรุณาลองใหม่อีกครั้ง"));
-      }
+      setError(error.response?.data?.message || "เกิดข้อผิดพลาดในการบันทึกแผน");
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleDiscard = () => {
-    if (window.confirm("ต้องการยกเลิกการสร้างแผนนี้และกลับไปยังหน้าก่อนหน้าหรือไม่?")){
+    if (window.confirm("ต้องการยกเลิกการสร้างแผนนี้และกลับไปยังหน้าก่อนหน้าหรือไม่?")) {
       navigate(-1);
     }
   };

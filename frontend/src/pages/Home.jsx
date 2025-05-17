@@ -30,29 +30,33 @@ function Home() {
         const placesResponse = await placeService.getAllPlaces();
         setFeaturedPlaces(placesResponse.data || []);
 
-        // โหลดแผนท่องเที่ยวล่าสุด (อาจจะต้องสร้าง API พิเศษสำหรับดึงแผนท่องเที่ยวสาธารณะล่าสุด)
+        // โหลดแผนท่องเที่ยวล่าสุด
         const plansResponse = await planService.getAllPublicPlans();
-        setRecentPlans(plansResponse.data || []);
+        const publicPlans = plansResponse.data || [];
+
+        // โหลดแผนท่องเที่ยวจาก localStorage
+        const localPlans = JSON.parse(localStorage.getItem('userPlans') || '[]');
+        
+        // รวมแผนท่องเที่ยวทั้งหมดและเรียงตามวันที่สร้างล่าสุด
+        const allPlans = [...publicPlans, ...localPlans]
+          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+          .slice(0, 6); // แสดงเพียง 6 แผนล่าสุด
+
+        setRecentPlans(allPlans);
         
       } catch (error) {
         console.error("เกิดข้อผิดพลาดในการโหลดข้อมูลเริ่มต้น:", error);
-        // หากเกิด error ในการโหลด API จริง ให้ใช้ mock data ที่ import มาโดยตรงเป็น fallback
-        // (ต้อง import MOCK_ATTRACTIONS, MOCK_PLANS ฯลฯ เข้ามาใน Home.jsx ด้วย)
-        // แต่เนื่องจากตอนนี้ service layer จัดการ mock แล้ว จึงไม่จำเป็นต้องทำที่นี่ซ้ำ
-        
-        // ตั้งค่า state เป็น array ว่าง เพื่อป้องกัน error ในการ render
         setCategories([]);
         setProvinces([]);
         setFeaturedPlaces([]);
         setRecentPlans([]);
-
       } finally {
         setLoading(false);
       }
     };
 
     fetchInitialData();
-  }, []); // Dependencies: [] หมายถึงเรียกครั้งเดียวตอน component mount
+  }, []);
 
   return (
     <div className='bg-[#E7F9FF]'>

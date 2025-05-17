@@ -25,11 +25,20 @@ public class Plan {
     @Column(name = "created_date")
     private LocalDateTime createdDate;
     
+    @Column(name = "updated_date")
+    private LocalDateTime updatedDate;
+    
     @Column(name = "fav_amount")
     private Integer favAmount;
     
     @Column(columnDefinition = "TEXT")
     private String note;
+    
+    @Column(name = "is_public")
+    private Boolean isPublic = true;
+    
+    @Column(name = "status")
+    private String status = "active";
     
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "budget_id", referencedColumnName = "budget_id")
@@ -51,7 +60,10 @@ public class Plan {
         this.name = name;
         this.img = img;
         this.createdDate = LocalDateTime.now();
+        this.updatedDate = LocalDateTime.now();
         this.favAmount = 0;
+        this.isPublic = true;
+        this.status = "active";
     }
 
     // Getters and Setters
@@ -85,6 +97,14 @@ public class Plan {
 
     public void setCreatedDate(LocalDateTime createdDate) {
         this.createdDate = createdDate;
+    }
+
+    public LocalDateTime getUpdatedDate() {
+        return updatedDate;
+    }
+
+    public void setUpdatedDate(LocalDateTime updatedDate) {
+        this.updatedDate = updatedDate;
     }
 
     public Integer getFavAmount() {
@@ -125,5 +145,21 @@ public class Plan {
     
     public void setJsonData(String jsonData) {
         this.jsonData = jsonData;
+    }
+
+    public Boolean getIsPublic() {
+        return isPublic;
+    }
+
+    public void setIsPublic(Boolean isPublic) {
+        this.isPublic = isPublic;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

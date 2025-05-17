@@ -254,20 +254,18 @@ export const planService = {
     return api.get('/plans');
   },
   
-  getPlanById: (id) => {
+  getUserPlanById: (id) => {
     if (useMock) {
-      console.log(`Using mock data for getPlanById: ${id}`);
-      // ค้นหาจาก mock data
-      let plan = MOCK_PLANS.find(p => p.id === parseInt(id));
-      
-      // ถ้าไม่เจอให้ค้นหาจาก localStorage
-      if (!plan) {
-        const tempPlans = JSON.parse(localStorage.getItem('tempPlans') || '[]');
-        plan = tempPlans.find(p => p.id === parseInt(id));
-      }
-      
-      return Promise.resolve({ data: plan || null });
+      console.log(`Using mock data for getUserPlanById: ${id}`);
+      // ค้นหาแผนจาก MOCK_PLANS หรือ localStorage
+      const foundPlan = MOCK_PLANS.find(p => String(p.id) === String(id));
+      if (foundPlan) return Promise.resolve({ data: foundPlan });
+
+      const userPlans = JSON.parse(localStorage.getItem('userPlans') || '[]');
+      const userFoundPlan = userPlans.find(p => String(p.id) === String(id));
+      return Promise.resolve({ data: userFoundPlan || null });
     }
+    // เรียก API จริง
     return api.get(`/plans/${id}`);
   },
   

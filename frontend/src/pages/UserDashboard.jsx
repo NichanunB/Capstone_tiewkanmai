@@ -19,6 +19,7 @@ const UserDashboard = () => {
   const [loadingPlans, setLoadingPlans] = useState(false);
   const [favoriteAttractions, setFavoriteAttractions] = useState([]);
   const [favoritePlans, setFavoritePlans] = useState([]);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (activeMenu === 'travel-plans' || reloadParam === 'plans') {
@@ -31,20 +32,23 @@ const UserDashboard = () => {
   const fetchUserPlans = async () => {
     try {
       setLoadingPlans(true);
+      setError("");
       
-      const tempPlans = JSON.parse(localStorage.getItem('tempPlans') || '[]');
+      const response = await planService.getUserPlans();
       
-      let allPlans = [...tempPlans];
-      
-      if (import.meta.env.MODE === 'development' && tempPlans.length > 0) {
+      if (response && response.data && Array.isArray(response.data)) {
+        setUserPlans(response.data);
+      } else {
+        console.warn("API did not return expected data for user plans:", response);
+        setUserPlans([]);
+        setError("ไม่สามารถโหลดแผนท่องเที่ยวของคุณได้: รูปแบบข้อมูลไม่ถูกต้อง");
       }
       
-      setUserPlans(allPlans);
     } catch (error) {
       console.error('ไม่สามารถโหลดแผนท่องเที่ยว:', error);
-      
-      const tempPlans = JSON.parse(localStorage.getItem('tempPlans') || '[]');
+      const tempPlans = JSON.parse(localStorage.getItem('userPlans') || '[]');
       setUserPlans(tempPlans);
+      setError("ไม่สามารถโหลดแผนท่องเที่ยวของคุณได้ กรุณาลองใหม่ภายหลัง");
     } finally {
       setLoadingPlans(false);
     }
@@ -75,8 +79,7 @@ const UserDashboard = () => {
   }, [reloadParam]);
 
   const loadUserPlans = () => {
-    const tempPlans = JSON.parse(localStorage.getItem('tempPlans') || '[]');
-    setUserPlans(tempPlans);
+    console.log("loadUserPlans from localStorage is now a fallback or deprecated.");
   };
 
   useEffect(() => {
@@ -168,6 +171,7 @@ const UserDashboard = () => {
       ) : userPlans.length === 0 ? (
         <div className="text-center py-10">
           <p className="text-gray-500 mb-4">คุณยังไม่มีแผนท่องเที่ยว</p>
+          {error && <p className="text-red-500 mb-4">{error}</p>}
           <Link to="/create-plan">
             <button className="bg-[#3674B5] text-white px-4 py-2 rounded-lg flex items-center gap-2 mx-auto hover:bg-[#2A5A8E]">
               <Plus className="w-5 h-5" />
@@ -176,26 +180,41 @@ const UserDashboard = () => {
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {userPlans.map((plan) => (
-            <div key={plan.id} className="border rounded-lg p-4 flex justify-between items-center bg-white shadow-sm hover:shadow-md transition-shadow">
-              <div>
-                <h4 className="text-lg font-semibold">{plan.name}</h4>
-                <p className="text-sm text-gray-500">{plan.note || 'ไม่มีโน้ต'}</p>
-                <p className="text-xs text-gray-400 mt-1">
-                  สร้างเมื่อ: {new Date(plan.createdAt).toLocaleDateString('th-TH')}
+            <div key={plan.id} className="border rounded-lg overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow">
+              {plan.coverImage ? (
+                <img 
+                  src={plan.coverImage}
+                  alt={plan.title || 'แผนเที่ยว'}
+                  className="w-full h-48 object-cover"
+                />
+              ) : (
+                <div className="w-full h-48 bg-gray-200 flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+              )}
+              <div className="p-4">
+                <h4 className="text-lg font-semibold mb-2">{plan.title || plan.name || 'ไม่มีชื่อแผน'}</h4>
+                {plan.note && (
+                  <p className="text-sm text-gray-600 mb-3 line-clamp-2">{plan.note}</p>
+                )}
+                <p className="text-xs text-gray-400 mb-4">
+                  สร้างเมื่อ: {plan.createdAt ? new Date(plan.createdAt).toLocaleDateString('th-TH') : 'ไม่ระบุวันที่'}
                 </p>
-              </div>
-              <div className="flex gap-2">
-                <Link to={`/travel-plan/${plan.id}`}>
-                  <button className="text-blue-500 hover:underline">ดู</button>
-                </Link>
-                <button
-                  onClick={() => handleDeletePlan(plan.id)}
-                  className="text-red-500 hover:underline ml-4"
-                >
-                  ลบ
-                </button>
+                <div className="flex justify-between items-center">
+                  <Link to={`/my-travel-plan/${plan.id}`}>
+                    <button className="text-[#3674B5] hover:text-[#2A5A8E] font-medium">ดูรายละเอียด</button>
+                  </Link>
+                  <button
+                    onClick={() => handleDeletePlan(plan.id)}
+                    className="text-red-500 hover:text-red-600"
+                  >
+                    ลบ
+                  </button>
+                </div>
               </div>
             </div>
           ))}

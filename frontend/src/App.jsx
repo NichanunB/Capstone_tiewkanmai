@@ -14,6 +14,7 @@ import UserDashboard from './pages/UserDashboard';
 import CreatePlanPage from './pages/CreatePlanPage';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import UserPlanDetailPage from './pages/UserPlanDetailPage';
 
 function App() {
   return (
@@ -29,7 +30,6 @@ function App() {
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/shared-travel-plan" element={<SharedTravelPlanPage />} />
           <Route path="/shared-travel-plan/:id" element={<SharedTravelPlanDetailPage />} />
           
           {/* เส้นทางที่ต้องล็อกอิน */}
@@ -46,6 +46,22 @@ function App() {
             element={
               <ProtectedRoute>
                 <CreatePlanPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/my-travel-plan/:id" 
+            element={
+              <ProtectedRoute>
+                <UserPlanDetailPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/shared-travel-plan/:id" 
+            element={
+              <ProtectedRoute>
+                <UserPlanDetailPage />
               </ProtectedRoute>
             } 
           />
