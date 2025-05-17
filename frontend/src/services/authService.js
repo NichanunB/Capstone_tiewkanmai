@@ -1,6 +1,9 @@
 import axios from 'axios';
 
-const BASE_URL = import.meta.env.VITE_API_URL;
+// ✅ เพิ่ม fallback URL ถ้า VITE_API_URL ไม่ได้ถูกตั้งไว้ใน .env
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+
+console.log("✅ BASE_URL used in authService:", BASE_URL);
 
 const authService = {
   // ล็อกอิน

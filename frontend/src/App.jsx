@@ -6,7 +6,8 @@ import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
 import ResetPassword from './pages/ResetPassword';
 import SearchResultPage from './pages/SearchResultPage';
-import SharedTravelPlanPage from './pages/SharedTravelPlanPage';
+import SharedTravelPlanPage from './pages/shared-travel-plan/SharedTravelPlan';
+import SharedTravelPlanDetailPage from './pages/shared-travel-plan/SharedTravelPlanDetailPage';
 import PlaceDetailPage from './pages/PlaceDetailPage';
 import TravelPlan from './components/TravelPlan';
 import UserDashboard from './pages/UserDashboard';
@@ -28,6 +29,8 @@ function App() {
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/shared-travel-plan" element={<SharedTravelPlanPage />} />
+          <Route path="/shared-travel-plan/:id" element={<SharedTravelPlanDetailPage />} />
           
           {/* เส้นทางที่ต้องล็อกอิน */}
           <Route 

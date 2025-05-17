@@ -30,7 +30,7 @@ export const AuthProvider = ({ children }) => {
           console.log("Verifying token from localStorage");
           // กำหนด header ชั่วคราวสำหรับการตรวจสอบ token
           // eslint-disable-next-line no-undef
-          const response = await axios.get(`${process.env.VITE_API_URL || 'http://localhost:8080/api'}/dev/user/profile`, {
+          const response = await axios.get(`${import.meta.env.VITE_API_URL || 'http://localhost:8080/api'}/dev/user/profile`, {
             headers: {
               'Authorization': `Bearer ${token}`
             }

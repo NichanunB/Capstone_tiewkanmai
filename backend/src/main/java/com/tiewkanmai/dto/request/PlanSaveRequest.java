@@ -1,26 +1,49 @@
 package com.tiewkanmai.dto.request;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.constraints.NotBlank;
 
 public class PlanSaveRequest {
+
     @NotBlank
-    private String title;            // เดิมชื่อ 'name'
-    
-    private String jsonData;         // เก็บ blocks JSON.stringify(...)
-    private String note;
-    
-    private String coverImage;       // เดิมชื่อ 'img'
+    private String title;            // ชื่อแผน
 
-    // --- getters & setters ---
-    public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
+    private JsonNode jsonData;       // เก็บข้อมูลบล็อกต่าง ๆ ในรูปแบบ JSON (Array/Object)
 
-    public String getJsonData() { return jsonData; }
-    public void setJsonData(String jsonData) { this.jsonData = jsonData; }
+    private String note;             // หมายเหตุ
 
-    public String getNote() { return note; }
-    public void setNote(String note) { this.note = note; }
+    private String coverImage;       // ภาพหน้าปก (Base64)
 
-    public String getCoverImage() { return coverImage; }
-    public void setCoverImage(String coverImage) { this.coverImage = coverImage; }
+    // --- Getters & Setters ---
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public JsonNode getJsonData() {
+        return jsonData;
+    }
+
+    public void setJsonData(JsonNode jsonData) {
+        this.jsonData = jsonData;
+    }
+
+    public String getNote() {
+        return note;
+    }
+
+    public void setNote(String note) {
+        this.note = note;
+    }
+
+    public String getCoverImage() {
+        return coverImage;
+    }
+
+    public void setCoverImage(String coverImage) {
+        this.coverImage = coverImage;
+    }
 }

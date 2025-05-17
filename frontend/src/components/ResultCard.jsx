@@ -1,5 +1,6 @@
 import React from 'react';
 import { Heart } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const ResultCard = ({ attraction, isFavorite, onToggleFavorite }) => {
   const handleImageError = (e) => {
@@ -27,11 +28,15 @@ const ResultCard = ({ attraction, isFavorite, onToggleFavorite }) => {
             <Heart className={`h-5 w-5 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-400'}`} />
           </button>
         </div>
-        <p className="text-gray-700 mt-2">{attraction.description}</p>
+        <p className="text-gray-700 mt-2 line-clamp-2" style={{display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden'}}>
+          {attraction.description}
+        </p>
         <div className="mt-auto pt-2">
-          <button className="bg-blue-500 text-white px-4 py-1 rounded-lg mt-2 hover:bg-blue-600">
-            ดูรายละเอียด
-          </button>
+          <Link to={`/place/${attraction.id}`}>
+            <button className="bg-blue-500 text-white px-4 py-1 rounded-lg mt-2 hover:bg-blue-600">
+              ดูรายละเอียด
+            </button>
+          </Link>
         </div>
       </div>
     </div>

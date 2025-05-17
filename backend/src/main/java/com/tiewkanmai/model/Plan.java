@@ -19,6 +19,7 @@ public class Plan {
     @Column(name = "plan_name")
     private String name;
     
+    @Column(columnDefinition = "LONGTEXT")
     private String img;
     
     @Column(name = "created_date")

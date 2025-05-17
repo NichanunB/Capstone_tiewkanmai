@@ -91,12 +91,14 @@ public class PlanService {
             User user = userOpt.get();
 
             Plan plan = new Plan();
-            plan.setName(request.getTitle());               // ใช้ title
-            plan.setImg(request.getCoverImage());           // ใช้ coverImage
+            plan.setName(request.getTitle());
+            plan.setImg(request.getCoverImage());
             plan.setCreatedDate(LocalDateTime.now());
             plan.setFavAmount(0);
             plan.setNote(request.getNote());
-            plan.setJsonData(request.getJsonData());
+
+            // ✅ แปลง JsonNode → String
+            plan.setJsonData(request.getJsonData().toString());
 
             Budget budget = new Budget();
             budget.setCategory("General");
@@ -134,10 +136,12 @@ public class PlanService {
         if (!planOpt.isPresent()) return null;
 
         Plan plan = planOpt.get();
-        plan.setName(request.getTitle());               // ใช้ title
-        if (request.getCoverImage() != null) plan.setImg(request.getCoverImage()); // ใช้ coverImage
+        plan.setName(request.getTitle());
+        if (request.getCoverImage() != null) plan.setImg(request.getCoverImage());
         if (request.getNote() != null) plan.setNote(request.getNote());
-        plan.setJsonData(request.getJsonData());
+
+        // ✅ แปลง JsonNode → String
+        plan.setJsonData(request.getJsonData().toString());
 
         planRepository.save(plan);
         return plan.getId();
@@ -175,8 +179,8 @@ public class PlanService {
     private PlanResponse convertToPlanResponse(Plan plan) {
         PlanResponse response = new PlanResponse();
         response.setId(plan.getId());
-        response.setTitle(plan.getName());             // ใช้ title
-        response.setCoverImage(plan.getImg());         // ใช้ coverImage
+        response.setTitle(plan.getName());
+        response.setCoverImage(plan.getImg());
         response.setCreatedDate(plan.getCreatedDate());
         response.setFavAmount(plan.getFavAmount());
         response.setNote(plan.getNote());

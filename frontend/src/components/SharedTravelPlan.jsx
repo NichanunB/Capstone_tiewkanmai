@@ -3,82 +3,7 @@ import { Globe, ChevronDown } from "lucide-react"
 import TravelCard from "./TravelCard"
 import { Link } from 'react-router-dom'
 import Pagination from "./Pagination"
-
-const travelPlans = [
-    {
-      id: 1,
-      image: "/placeholder.svg",
-      title: "Backpacking Japan",
-      author: "Alice",
-      locations: ["Tokyo", "Kyoto", "Osaka"],
-      likes: 95,
-    },
-    {
-      id: 2,
-      image: "/placeholder.svg",
-      title: "Europe on a Budget",
-      author: "John",
-      locations: ["Paris", "Berlin", "Rome"],
-      likes: 88,
-    },
-    {
-      id: 3,
-      image: "/placeholder.svg",
-      title: "Thailand Beach Escape",
-      author: "Emma",
-      locations: ["Phuket", "Krabi", "Koh Samui"],
-      likes: 200,
-    },
-    {
-      id: 4,
-      image: "/placeholder.svg",
-      title: "Road Trip Across USA",
-      author: "Mike",
-      locations: ["Los Angeles", "Las Vegas", "New York"],
-      likes: 142,
-    },
-    {
-      id: 5,
-      image: "/placeholder.svg",
-      title: "Discovering South Korea",
-      author: "Soojin",
-      locations: ["Seoul", "Busan", "Jeju"],
-      likes: 130,
-    },
-    {
-      id: 6,
-      image: "/placeholder.svg",
-      title: "Nordic Adventure",
-      author: "Lena",
-      locations: ["Oslo", "Stockholm", "Copenhagen"],
-      likes: 110,
-    },
-    {
-      id: 7,
-      image: "/placeholder.svg",
-      title: "Australia East Coast",
-      author: "Liam",
-      locations: ["Sydney", "Brisbane", "Cairns"],
-      likes: 105,
-    },
-    {
-      id: 8,
-      image: "/placeholder.svg",
-      title: "Magical Morocco",
-      author: "Zara",
-      locations: ["Marrakech", "Fez", "Chefchaouen"],
-      likes: 89,
-    },
-    {
-      id: 9,
-      image: "/placeholder.svg",
-      title: "Canadian Rockies",
-      author: "Noah",
-      locations: ["Banff", "Jasper", "Lake Louise"],
-      likes: 150,
-    },
-  ]
-  
+import { MOCK_PLANS, MOCK_ATTRACTIONS } from '../mockData/mockData'
 
 function SharedTravelPlan() {
   const [showDropdown, setShowDropdown] = useState(false)
@@ -87,8 +12,31 @@ function SharedTravelPlan() {
   const handleSortSelect = (sortOption) => {
     setSelectedSort(sortOption)
     setShowDropdown(false)
-    // Here you can add logic to sort the travel plans based on the selected option
+    // สามารถเพิ่ม logic การ sort ได้ที่นี่
   }
+
+  // แปลงข้อมูล MOCK_PLANS ให้เหมาะกับ TravelCard และโชว์ชื่อสถานที่จริง
+  const plans = MOCK_PLANS.map(plan => {
+    let locations = [];
+    try {
+      const arr = JSON.parse(plan.jsonData)
+      const placesBlock = arr.find(b => b.type === 'places')
+      if (placesBlock && Array.isArray(placesBlock.data.places)) {
+        locations = placesBlock.data.places.map(placeId => {
+          const found = MOCK_ATTRACTIONS.find(a => a.id === placeId)
+          return found ? found.name : `สถานที่ ${placeId}`
+        })
+      }
+    } catch {}
+    return {
+      id: plan.id,
+      image: plan.coverImage,
+      title: plan.title,
+      author: plan.author || 'ผู้ใช้',
+      locations,
+      likes: plan.likes || Math.floor(Math.random() * 200)
+    }
+  })
 
   return (
     <div className="py-6">
@@ -142,7 +90,7 @@ function SharedTravelPlan() {
 
         {/* Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {travelPlans.map((plan) => (
+          {plans.map((plan) => (
             <Link to={`/travel-plan/${plan.id}`} key={plan.id}>
               <TravelCard {...plan} />
             </Link>

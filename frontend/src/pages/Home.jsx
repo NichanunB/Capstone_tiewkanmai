@@ -9,7 +9,7 @@ import { placeService, planService, categoryService, provinceService } from '../
 function Home() {
   const [categories, setCategories] = useState([]);
   const [provinces, setProvinces] = useState([]);
-  const [, setFeaturedPlaces] = useState([]);
+  const [featuredPlaces, setFeaturedPlaces] = useState([]);
   const [recentPlans, setRecentPlans] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -20,34 +20,39 @@ function Home() {
         
         // โหลดหมวดหมู่ทั้งหมด
         const categoriesResponse = await categoryService.getAllCategories();
-        setCategories(categoriesResponse.data);
+        setCategories(categoriesResponse.data || []);
         
         // โหลดจังหวัดทั้งหมด
         const provincesResponse = await provinceService.getAllProvinces();
-        setProvinces(provincesResponse.data);
+        setProvinces(provincesResponse.data || []);
         
-        // โหลดสถานที่ท่องเที่ยวแนะนำ (random หรือเอาจาก rate สูงสุด)
+        // โหลดสถานที่ท่องเที่ยวแนะนำ
         const placesResponse = await placeService.getAllPlaces();
-        setFeaturedPlaces(placesResponse.data.slice(0, 6)); // เอา 6 อันแรก
+        setFeaturedPlaces(placesResponse.data || []);
+
+        // โหลดแผนท่องเที่ยวล่าสุด (อาจจะต้องสร้าง API พิเศษสำหรับดึงแผนท่องเที่ยวสาธารณะล่าสุด)
+        const plansResponse = await planService.getAllPublicPlans();
+        setRecentPlans(plansResponse.data || []);
         
-        // โหลดแผนท่องเที่ยวล่าสุด (ถ้ามี API เฉพาะ)
-        try {
-          // อาจจะต้องสร้าง API พิเศษสำหรับดึงแผนท่องเที่ยวสาธารณะล่าสุด
-          const plansResponse = await planService.getUserPlans();
-          setRecentPlans(plansResponse.data.slice(0, 3)); // เอา 3 อันแรก
-        } catch (err) {
-          console.warn("ไม่สามารถโหลดแผนท่องเที่ยวได้:", err);
-          setRecentPlans([]); // ใช้ค่าเริ่มต้นเป็นอาร์เรย์ว่าง
-        }
       } catch (error) {
         console.error("เกิดข้อผิดพลาดในการโหลดข้อมูลเริ่มต้น:", error);
+        // หากเกิด error ในการโหลด API จริง ให้ใช้ mock data ที่ import มาโดยตรงเป็น fallback
+        // (ต้อง import MOCK_ATTRACTIONS, MOCK_PLANS ฯลฯ เข้ามาใน Home.jsx ด้วย)
+        // แต่เนื่องจากตอนนี้ service layer จัดการ mock แล้ว จึงไม่จำเป็นต้องทำที่นี่ซ้ำ
+        
+        // ตั้งค่า state เป็น array ว่าง เพื่อป้องกัน error ในการ render
+        setCategories([]);
+        setProvinces([]);
+        setFeaturedPlaces([]);
+        setRecentPlans([]);
+
       } finally {
         setLoading(false);
       }
     };
 
     fetchInitialData();
-  }, []);
+  }, []); // Dependencies: [] หมายถึงเรียกครั้งเดียวตอน component mount
 
   return (
     <div className='bg-[#E7F9FF]'>

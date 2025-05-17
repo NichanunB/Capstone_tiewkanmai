@@ -5,8 +5,8 @@ import BlockContainer from "./BlockContainer";
 import { v4 as uuidv4 } from "uuid";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import planService from "../../services/planService"; // ✅ ใช้ default import
-
+import services from "../../services/api"; // ✅ ใช้ default export
+const { planService } = services;
 
 const initialBlocks = [
   { id: uuidv4(), type: "notes", data: { text: "" } },
@@ -32,16 +32,10 @@ const PlanEditor = () => {
   const { user } = useAuth();
 
   useEffect(() => {
-    // ตรวจสอบการล็อกอินเมื่อโหลดหน้า
-    if (!user) {
-      console.log("ไม่ได้ล็อกอิน");
-      
-      // ถ้าไม่ได้ล็อกอินและไม่ใช่โหมดพัฒนา ให้เด้งไปหน้า login
-      if (import.meta.env.MODE !== 'development') {
-        if (window.confirm("คุณยังไม่ได้เข้าสู่ระบบ ต้องการไปที่หน้าเข้าสู่ระบบหรือไม่?")) {
-          navigate('/login?redirect=/create-plan');
-          return;
-        }
+    if (!user && import.meta.env.MODE !== 'development') {
+      if (window.confirm("คุณยังไม่ได้เข้าสู่ระบบ ต้องการไปที่หน้าเข้าสู่ระบบหรือไม่?")) {
+        navigate('/login?redirect=/create-plan');
+        return;
       }
     }
   }, [user, navigate]);
@@ -54,35 +48,34 @@ const PlanEditor = () => {
   };
 
   const handleBlockChange = (idx, data) => {
-    setBlocks((blocks) => {
-      const updated = [...blocks];
+    setBlocks((prev) => {
+      const updated = [...prev];
       updated[idx] = { ...updated[idx], data };
       return updated;
     });
   };
 
   const addBlock = (type) => {
-    // กำหนดค่าเริ่มต้นตาม type
     let initialData = {};
     switch (type) {
-      case 'notes':
+      case "notes":
         initialData = { text: "" };
         break;
-      case 'places':
+      case "places":
         initialData = { places: [] };
         break;
-      case 'list':
+      case "list":
         initialData = { items: [] };
         break;
-      case 'budget':
+      case "budget":
         initialData = { items: [] };
         break;
       default:
         initialData = {};
     }
-    
-    setBlocks((blocks) => [
-      ...blocks,
+
+    setBlocks((prev) => [
+      ...prev,
       { id: uuidv4(), type, data: initialData },
     ]);
   };
@@ -90,45 +83,70 @@ const PlanEditor = () => {
   const handleSave = async () => {
     if (!title || !title.trim()) {
       setError("กรุณากรอกชื่อแผนท่องเที่ยว");
+      setIsSaving(false);
+      return;
+    }
+
+    if (!blocks || blocks.length === 0) {
+      setError("กรุณาเพิ่มอย่างน้อย 1 block");
+      setIsSaving(false);
       return;
     }
 
     setIsSaving(true);
     setError("");
 
-    const planData = {
-      name: title.trim(),
+    const planDataForApi = {
+      title: title.trim(),
       coverImage: coverImage || null,
       note: "",
-      jsonData: JSON.stringify(blocks),
+      jsonData: blocks, // ✅ ส่งแบบ object
     };
 
+    console.log("กำลังส่งข้อมูลไป backend:", planDataForApi);
+
     try {
-      // ใช้ planService แทนการเรียก axios โดยตรง
-      await planService.createPlan(planData);
-      
+      const userPlans = JSON.parse(localStorage.getItem('tempPlans') || '[]');
+      const planDataForLocal = {
+        id: Date.now(),
+        title: title.trim(),
+        coverImage: coverImage || null,
+        note: "",
+        jsonData: blocks,
+        createdAt: new Date().toISOString(),
+        author: user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : 'ผู้ใช้',
+        likes: 0
+      };
+      userPlans.push(planDataForLocal);
+
+      try {
+        localStorage.setItem('tempPlans', JSON.stringify(userPlans));
+      } catch (e) {
+        if (e.name === 'QuotaExceededError') {
+          setError("พื้นที่การเก็บข้อมูลแผนชั่วคราวเต็ม กรุณาลบแผนเก่าออกก่อน");
+          console.error("LocalStorage เต็ม", e);
+          setIsSaving(false);
+          return;
+        }
+      }
+
+      const response = await planService.createPlan(planDataForApi);
+      console.log("Response from backend:", response);
+
       alert("บันทึกแผนการเดินทางเรียบร้อยแล้ว!");
       navigate("/dashboard?reload=plans");
     } catch (error) {
-      console.error("❌ Save plan failed:", error.response?.data || error.message);
-      
-      setError("เกิดข้อผิดพลาดในการบันทึกแผน: " + (error.response?.data?.message || "กรุณาลองใหม่อีกครั้ง"));
-      
-      // สำหรับการพัฒนา: ยังให้ไปหน้า dashboard แม้มี error
-      if (import.meta.env.MODE === 'development') {
-        if (window.confirm("เกิดข้อผิดพลาดในการบันทึก แต่จะลองไปหน้า dashboard ต่อหรือไม่?")) {
-          // บันทึกข้อมูลลง localStorage เพื่อจำลองการบันทึกสำเร็จ
-          const tempPlans = JSON.parse(localStorage.getItem('tempPlans') || '[]');
-          tempPlans.push({
-            id: Date.now(),
-            name: title.trim(),
-            note: "",
-            createdAt: new Date().toISOString()
-          });
-          localStorage.setItem('tempPlans', JSON.stringify(tempPlans));
-          
-          navigate("/dashboard?reload=plans");
-        }
+      console.error("Error saving plan:", error);
+      console.error("Error details:", {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      });
+
+      if (error.response?.status === 400) {
+        setError("ข้อมูลไม่ถูกต้อง: " + (error.response.data?.message || "กรุณาตรวจสอบข้อมูลอีกครั้ง"));
+      } else {
+        setError("เกิดข้อผิดพลาดในการบันทึกแผน: " + (error.response?.data?.message || "กรุณาลองใหม่อีกครั้ง"));
       }
     } finally {
       setIsSaving(false);
@@ -136,7 +154,9 @@ const PlanEditor = () => {
   };
 
   const handleDiscard = () => {
-    navigate(-1);
+    if (window.confirm("ต้องการยกเลิกการสร้างแผนนี้และกลับไปยังหน้าก่อนหน้าหรือไม่?")){
+      navigate(-1);
+    }
   };
 
   return (
@@ -149,14 +169,13 @@ const PlanEditor = () => {
           moveBlock={moveBlock}
           onBlockChange={handleBlockChange}
         />
-        
-        {/* แสดงข้อความ error */}
+
         {error && (
           <div className="mt-4 p-3 bg-red-100 text-red-700 rounded-md">
             {error}
           </div>
         )}
-        
+
         <div className="mt-6 flex justify-between items-end">
           <div className="flex gap-2 flex-wrap">
             {blockTypes.map((bt) => (

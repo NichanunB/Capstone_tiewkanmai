@@ -119,7 +119,9 @@ public class PlaceService {
         response.setDescription(place.getDescription());
 
         // ✅ ดึงรูปจาก Longdo API สด
-        response.setImage(fetchImageFromLongdo(place.getName()));
+        response.setImage(place.getImg() != null && !place.getImg().isEmpty() 
+                             ? place.getImg() 
+                             : "https://placehold.co/400x300?text=No+Image"); // Fallback ด้วยรูป placeholder
 
         response.setRating(place.getRating());
         response.setCategory(place.getCategory() != null ? place.getCategory().getName() : null);
@@ -146,27 +148,5 @@ public class PlaceService {
         return places.stream()
                 .map(this::convertToPlaceResponse)
                 .collect(Collectors.toList());
-    }
-
-    /**
-     * ดึงภาพจาก Longdo API โดยตรงด้วยชื่อสถานที่
-     */
-    private String fetchImageFromLongdo(String name) {
-        try {
-            String encodedName = URLEncoder.encode(name, StandardCharsets.UTF_8);
-            String url = "https://api.longdo.com/map/services?name=" + encodedName + "&key=" + longdoApiKey;
-
-            Map<String, Object> response = restTemplate.getForObject(url, Map.class);
-            if (response != null && response.containsKey("data")) {
-                List<Map<String, Object>> dataList = (List<Map<String, Object>>) response.get("data");
-                if (!dataList.isEmpty() && dataList.get(0).containsKey("pic")) {
-                    return (String) dataList.get(0).get("pic");
-                }
-            }
-        } catch (Exception e) {
-            System.out.println("⚠️ Longdo API error for " + name + ": " + e.getMessage());
-        }
-
-        return "https://via.placeholder.com/400x300?text=No+Image";
     }
 }

@@ -6,6 +6,7 @@ import ResultTabs from '../components/ResultTabs';
 import Pagination from '../components/Pagination';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import { MOCK_ATTRACTIONS, MOCK_CATEGORIES } from '../mockData/mockData'; // ✅ import mockdata จริง รวมถึง categories
 
 export default function SearchResultPage() {
   const [activeTab, setActiveTab] = useState('ที่ท่องเที่ยว');
@@ -13,87 +14,38 @@ export default function SearchResultPage() {
   const [selectedFilters, setSelectedFilters] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // ข้อมูลตัวอย่างที่จะแสดงเสมอ โดยไม่ต้องเรียก API
-  const attractions = [{
-    id: 1,
-    title: "เยาวราช",
-    description: "ย่านจีนอัน อาหารแซบ และบรรยากาศคึกคัก",
-    image: "https://via.placeholder.com/300x200?text=เยาวราช",
-    category: "ที่ท่องเที่ยว",
-  },
-  {
-    id: 2,
-    title: "วัดเล่งเน่ยยี่",
-    description:
-      "วัดจีนที่เก่าแก่ที่สุดในประเทศไทย ตั้งอยู่ในย่านเยาวราช สร้างขึ้นในสมัยรัชกาลที่ 3 เป็นศาสนสถานของชาวจีนที่เข้ามาตั้งรกรากในไทย",
-    image: "https://via.placeholder.com/300x200?text=วัดเล่งเน่ยยี่",
-    category: "ที่ท่องเที่ยว",
-    isFavorite: true,
-  },
-  {
-    id: 3,
-    title: "ถนนข้าวสาร",
-    description:
-      "ถนนสายสั้นๆ ในเขตพระนคร กรุงเทพฯ เป็นแหล่งท่องเที่ยวยอดนิยมของนักท่องเที่ยวชาวต่างชาติ",
-    image: "https://via.placeholder.com/300x200?text=ถนนข้าวสาร",
-    category: "ที่ท่องเที่ยว",
-  },
-  {
-    id: 4,
-    title: "วัดพระแก้ว",
-    description:
-      "วัดพระศรีรัตนศาสดาราม หรือที่เรียกกันทั่วไปว่า วัดพระแก้ว เป็นวัดที่สำคัญที่สุดในประเทศไทย ตั้งอยู่ในพระบรมมหาราชวัง",
-    image: "https://via.placeholder.com/300x200?text=วัดพระแก้ว",
-    category: "ที่ท่องเที่ยว",
-  },
-  {
-    id: 5,
-    title: "ตลาดน้ำอัมพวา",
-    description:
-      "ตลาดน้ำยามเย็นและกลางคืนที่มีชื่อเสียงของอำเภอเมืองสมุทรสงคราม เป็นแหล่งท่องเที่ยวชมหิ่งห้อยในยามค่ำคืน",
-    image: "https://via.placeholder.com/300x200?text=ตลาดน้ำอัมพวา",
-    category: "ร้านอาหาร",
-  },
-  {
-    id: 6,
-    title: "คลองบางหลวง",
-    description:
-      "คลองในเขตธนบุรี กรุงเทพฯ เป็นแหล่งท่องเที่ยวเชิงอนุรักษ์ที่ยังคงรักษาวิถีชีวิตริมน้ำแบบดั้งเดิม",
-    image: "https://via.placeholder.com/300x200?text=คลองบางหลวง",
-    category: "ที่ท่องเที่ยว",
-  }];
+  // Load favorites from localStorage on initial mount
+  useEffect(() => {
+    const storedFavorites = JSON.parse(localStorage.getItem('favoriteAttractions') || '{}');
+    setFavorites(storedFavorites);
+  }, []);
+
+  // Update localStorage whenever favorites state changes
+  useEffect(() => {
+    localStorage.setItem('favoriteAttractions', JSON.stringify(favorites));
+  }, [favorites]);
+
+  // ใช้ mockdata จริง
+  const attractions = MOCK_ATTRACTIONS.map(item => ({
+    id: item.id,
+    title: item.name || item.title || '-',
+    description: item.description || '-',
+    image: item.coverImage || item.image || `https://placehold.co/300x200?text=${item.name || 'ไม่มีรูป'}`,
+    // ตรวจสอบ category ว่าตรงกับ MOCK_CATEGORIES หรือไม่ ถ้าไม่ตรงให้เป็น 'อื่นๆ' หรือ 'ที่ท่องเที่ยว'
+    category: MOCK_CATEGORIES.find(cat => cat.name === item.category)?.name || 'ที่ท่องเที่ยว', 
+    // isFavorite field in mock data is not used directly here, controlled by state
+  }));
   
-  const filters = [
-    { id: "ชายหาด", label: "ชายหาด" },
-    { id: "ทะเล", label: "ทะเล" },
-    { id: "เกาะ", label: "เกาะ" },
-    { id: "ภูเขา", label: "ภูเขา" },
-    { id: "น้ำตก", label: "น้ำตก" },
-    { id: "ป่า", label: "ป่า" },
-    { id: "ทะเลสาบ", label: "ทะเลสาบ" },
-    { id: "สวนสาธารณะ", label: "สวนสาธารณะ" },
-    { id: "ทุ่งดอกไม้", label: "ทุ่งดอกไม้" },
-    { id: "ถ้ำ", label: "ถ้ำ" },
-    { id: "วัด", label: "วัด" },
-    { id: "โบราณสถาน", label: "โบราณสถาน" },
-    { id: "พิพิธภัณฑ์", label: "พิพิธภัณฑ์" },
-    { id: "หอศิลป์", label: "หอศิลป์" },
-    { id: "ตลาดนัด", label: "ตลาดนัด" },
-    { id: "ถนนคนเดิน", label: "ถนนคนเดิน" },
-    { id: "ห้างสรรพสินค้า", label: "ห้างสรรพสินค้า" },
-    { id: "คาเฟ่", label: "คาเฟ่" },
-    { id: "ร้านอาหาร", label: "ร้านอาหาร" },
-    { id: "สถานบันเทิง", label: "สถานบันเทิง (ผับ บาร์)" },
-    { id: "สวนสนุก", label: "สวนสนุก" },
-    { id: "สวนน้ำ", label: "สวนน้ำ" }
-  ];
+  // ใช้ MOCK_CATEGORIES สำหรับ filters
+  const filters = MOCK_CATEGORIES.map(cat => ({ id: cat.name, label: cat.name }));
   
-  const tabs = ['ที่ท่องเที่ยว', 'ร้านอาหาร', 'แผนเที่ยว'];
+  // Only 'ที่ท่องเที่ยว' tab
+  const tabs = ['ที่ท่องเที่ยว'];
 
   const toggleFavorite = (id) => {
     setFavorites(prev => ({
       ...prev,
-      [id]: !prev[id]
+      [id]: !prev[id] || false // Toggle status, default to false if undefined
     }));
   };
 
@@ -119,21 +71,15 @@ export default function SearchResultPage() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // กรองข้อมูลตามแท็บที่เลือก
+  // กรองข้อมูลตามแท็บที่เลือกและ filters ที่เลือก
   const filteredAttractions = attractions.filter(item => {
-    // กรองตาม tab
-    if (activeTab === 'ที่ท่องเที่ยว' && item.category !== 'ร้านอาหาร' && item.category !== 'แผนเที่ยว') {
-      return true;
-    }
-    if (activeTab === 'ร้านอาหาร' && item.category === 'ร้านอาหาร') {
-      return true;
-    }
-    if (activeTab === 'แผนเที่ยว' && item.category === 'แผนเที่ยว') {
-      return true;
-    }
+    // Since only 'ที่ท่องเที่ยว' tab remains, filter for items that should be under this tab
+    const isAttractionCategory = item.category !== 'ร้านอาหาร' && item.category !== 'แผนเที่ยว';
+
+    // กรองตาม filters ที่เลือก
+    const passCategoryFilter = selectedFilters.length === 0 || selectedFilters.includes(item.category);
     
-    // ถ้าไม่ตรงกับแท็บใดๆ
-    return false;
+    return isAttractionCategory && passCategoryFilter; // Combined filters
   });
 
   return (
@@ -153,7 +99,10 @@ export default function SearchResultPage() {
           
           <div className="bg-white rounded-lg shadow p-6 flex-1">
             <div className="flex-1">
-              <ResultTabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
+              {/* Render ResultTabs only if there is more than one tab (optional, but good practice if tabs might be added later) */}
+              {tabs.length > 1 ? (
+                <ResultTabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
+              ) : null} {/* Or you can remove ResultTabs completely if only one tab is always expected */}
 
               {isLoading ? (
                 <div className="flex justify-center items-center h-32">
@@ -165,7 +114,7 @@ export default function SearchResultPage() {
                     <ResultCard
                       key={attraction.id}
                       attraction={attraction}
-                      isFavorite={favorites[attraction.id] || attraction.isFavorite}
+                      isFavorite={!!favorites[attraction.id]} // Pass favorite status from state
                       onToggleFavorite={toggleFavorite}
                     />
                   ))}

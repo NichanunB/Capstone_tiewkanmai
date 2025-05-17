@@ -1,11 +1,11 @@
 // src/pages/PlaceDetailPage.jsx
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { placeService } from '../services/api';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import PlaceDetail from '../components/PlaceDetail';
 import RecommendedPlaces from '../components/RecommendedPlaces';
+import { MOCK_ATTRACTIONS } from '../mockData/mockData';
 
 const PlaceDetailPage = () => {
   const { id } = useParams(); // ดึง id จาก URL
@@ -15,35 +15,19 @@ const PlaceDetailPage = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchPlaceData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        // เรียกข้อมูลสถานที่ท่องเที่ยว
-        const placeResponse = await placeService.getPlaceById(id);
-        console.log("Place data:", placeResponse.data);
-        setPlace(placeResponse.data);
-        
-        // เรียกข้อมูลสถานที่ท่องเที่ยวที่เกี่ยวข้อง
-        try {
-          const relatedResponse = await placeService.getRelatedPlaces(id);
-          setRelatedPlaces(relatedResponse.data);
-        } catch (relatedError) {
-          console.warn("Could not load related places:", relatedError);
-          setRelatedPlaces([]);
-        }
-      } catch (err) {
-        console.error('ไม่สามารถโหลดข้อมูลสถานที่:', err);
-        setError('ไม่สามารถโหลดข้อมูลสถานที่ได้');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (id) {
-      fetchPlaceData();
+    setLoading(true);
+    setError(null);
+    // ดึงข้อมูลจาก MOCK_ATTRACTIONS
+    const found = MOCK_ATTRACTIONS.find(p => String(p.id) === String(id));
+    setPlace(found || null);
+    // หา related (จังหวัดเดียวกัน)
+    if (found) {
+      const related = MOCK_ATTRACTIONS.filter(p => p.id !== found.id && p.province === found.province).slice(0, 3);
+      setRelatedPlaces(related);
+    } else {
+      setRelatedPlaces([]);
     }
+    setLoading(false);
   }, [id]);
 
   // แปลงข้อมูลสำหรับ RecommendedPlaces
@@ -51,7 +35,7 @@ const PlaceDetailPage = () => {
     return places.map(place => ({
       id: place.id,
       title: place.name,
-      imageUrl: place.image,
+      imageUrl: place.image || place.coverImage,
       location: place.province,
       rating: place.rating || 0,
       tags: place.category ? [place.category] : []
@@ -92,11 +76,10 @@ const PlaceDetailPage = () => {
           rating={place.rating || 0}
           tags={place.categories || [place.category].filter(Boolean)}
           description={place.description || 'ไม่มีข้อมูลรายละเอียด'}
-          imageUrl={place.image}
+          imageUrl={place.image || place.coverImage}
           latitude={place.latitude}
           longitude={place.longitude}
         />
-        
         {relatedPlaces.length > 0 && (
           <RecommendedPlaces places={formatRelatedPlaces(relatedPlaces)} />
         )}

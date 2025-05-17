@@ -12,6 +12,13 @@ const PlaceDetail = ({
   latitude,
   longitude
 }) => {
+  // Log ค่า latitude และ longitude ที่ได้รับมาเพื่อตรวจสอบ
+  console.log("PlaceDetail received latitude:", latitude);
+  console.log("PlaceDetail received longitude:", longitude);
+
+  // ใช้ placehold.co เป็น fallback
+  const fallbackImageUrl = imageUrl || `https://placehold.co/800x400?text=${title || 'No Image Available'}`;
+
   return (
     <div className="mb-6">
       <PlaceHeader
@@ -22,12 +29,12 @@ const PlaceDetail = ({
       />
       <div className="rounded overflow-hidden mb-4">
         <img 
-          src={imageUrl || 'https://via.placeholder.com/800x400?text=No+Image+Available'} 
-          alt={title} 
-          className="w-full h-80 object-cover" 
+          src={fallbackImageUrl}
+          alt={title}
+          className="w-full h-80 object-cover"
           onError={(e) => {
             e.target.onerror = null;
-            e.target.src = 'https://via.placeholder.com/800x400?text=Image+Not+Found';
+            e.target.src = `https://placehold.co/800x400?text=Image+Not+Found`;
           }}
         />
       </div>
@@ -35,7 +42,8 @@ const PlaceDetail = ({
       <div className="border-t border-gray-200 my-6"></div>
       <h2 className="text-2xl font-bold mb-4">แผนที่</h2>
       <div className="h-80 bg-gray-200 rounded overflow-hidden">
-        {latitude && longitude ? (
+        {/* ตรวจสอบว่า latitude และ longitude เป็นตัวเลขก่อนส่งให้ LongdoMapComponent */}
+        {typeof latitude === 'number' && typeof longitude === 'number' ? (
           <LongdoMapComponent 
             latitude={latitude} 
             longitude={longitude} 
@@ -43,7 +51,7 @@ const PlaceDetail = ({
           />
         ) : (
           <div className="flex items-center justify-center h-full text-gray-500">
-            ไม่มีข้อมูลแผนที่
+            ไม่มีข้อมูลแผนที่ที่ถูกต้อง
           </div>
         )}
       </div>
