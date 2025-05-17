@@ -21,7 +21,7 @@ from collections import defaultdict
 app = FastAPI()
 
 # 🔌 เชื่อมต่อ MySQL
-engine = create_engine("mysql+pymysql://<username>:<password>@<host>:3306/TiewKanMai")
+engine = create_engine("mysql+pymysql://root:Gift!180305@local:3306/Tiewkanmai")
 
 class Recommendation(BaseModel):
     user_id: int
@@ -110,3 +110,4 @@ def recommend_places(req: Recommendation):
 
 #3. รันเซิร์ฟเวอร์ FastAPI
 #uvicorn main:app --reload
+#pip3 install fastapi uvicorn sqlalchemy pymysql scikit-learn scipy pandas

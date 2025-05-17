@@ -72,9 +72,13 @@ function TravelPlanSection({ plans = [], loading = false }) {
         {displayPlans.map((plan) => (
           <Link to={`/my-travel-plan/${plan.id}`} key={plan.id}>
             <Card
-              image={plan.coverImage || plan.img || "https://placehold.co/600x400?text=Plan"}
+              image={plan.coverImage}
               title={plan.title || plan.name}
               description={plan.category || ""}
+              onImageError={(e) => {
+                e.target.onerror = null;
+                e.target.src = "https://placehold.co/600x400?text=No+Image";
+              }}
             />
           </Link>
         ))}

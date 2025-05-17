@@ -3,7 +3,6 @@ import React from 'react';
 const ResultTabs = ({ activeTab, onTabChange }) => {
   const tabs = [
     { id: 'attraction', label: 'ที่ท่องเที่ยว' },
-    { id: 'restaurant', label: 'ร้านอาหาร' },
     { id: 'plan', label: 'แผนเที่ยว' },
   ];
 

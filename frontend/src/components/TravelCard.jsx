@@ -3,7 +3,7 @@ import { MapPin, Heart } from "lucide-react"
 import { useNavigate } from 'react-router-dom'
 
 const TravelCard = ({ plan }) => {
-  const { id, image, title, author, locations = [], likes = 0 } = plan
+  const { id, coverImage, title, author, locations = [], likes = 0 } = plan
   const navigate = useNavigate()
   const [isFavorited, setIsFavorited] = useState(false)
 
@@ -37,9 +37,13 @@ const TravelCard = ({ plan }) => {
     >
       <div className="h-48 overflow-hidden">
         <img
-          src={image || "/placeholder.svg"}
+          src={coverImage || "/placeholder.svg"}
           alt={title || "แผนเที่ยว"}
           className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = "https://placehold.co/600x400?text=No+Image";
+          }}
         />
       </div>
       <div className="p-4">

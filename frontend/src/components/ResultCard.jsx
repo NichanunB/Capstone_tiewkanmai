@@ -5,14 +5,16 @@ import { Link } from 'react-router-dom';
 const ResultCard = ({ attraction, isFavorite, onToggleFavorite }) => {
   const handleImageError = (e) => {
     e.target.onerror = null;
-    e.target.src = `https://via.placeholder.com/300x200?text=${attraction.title || 'ไม่มีรูป'}`;
+    // เปลี่ยนเป็นใช้รูปภาพในโปรเจคแทน via.placeholder.com
+    e.target.src = "/assets/images/placeholder.jpg";
   };
 
   return (
     <div className="flex flex-col md:flex-row border-b py-4 gap-4">
       <div className="md:w-1/4">
         <img 
-          src={attraction.image || `https://via.placeholder.com/300x200?text=${attraction.title || 'ไม่มีรูป'}`} 
+          // เปลี่ยนจาก via.placeholder.com เป็นใช้รูปในโปรเจค
+          src={attraction.image || "/assets/images/placeholder.jpg"} 
           alt={attraction.title} 
           className="w-full h-40 object-cover rounded-lg"
           onError={handleImageError}

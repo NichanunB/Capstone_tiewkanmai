@@ -26,9 +26,11 @@ com/tiewkanmai/dto/response/PlaceResponse.class
 com/tiewkanmai/service/LongdoMapService.class
 com/tiewkanmai/controller/LongdoMapController.class
 com/tiewkanmai/controller/PlanController.class
+com/tiewkanmai/controller/RecommendController.class
 com/tiewkanmai/service/AttractionImporterService.class
 com/tiewkanmai/security/jwt/JwtUtils.class
 com/tiewkanmai/service/AuthService.class
+com/tiewkanmai/external/RecommendClient.class
 com/tiewkanmai/dto/request/RegisterRequest.class
 com/tiewkanmai/repository/ProvinceRepository.class
 com/tiewkanmai/repository/UserRepository.class
@@ -49,7 +51,9 @@ com/tiewkanmai/repository/SubdistrictRepository.class
 com/tiewkanmai/TiewkanmaiApplication.class
 com/tiewkanmai/controller/UserController$PasswordChangeRequest.class
 com/tiewkanmai/repository/DistrictRepository.class
+com/tiewkanmai/dto/request/RecommendRequest.class
 com/tiewkanmai/controller/RegionController.class
+com/tiewkanmai/dto/response/RecommendResponse.class
 com/tiewkanmai/dto/request/CreatePlanRequest.class
 com/tiewkanmai/service/PlanService.class
 com/tiewkanmai/service/PlaceService.class

@@ -10,41 +10,77 @@ const LongdoMapComponent = ({ latitude, longitude, markers = [], height = '400px
   const LONGDO_API_KEY = 'cfc5d0e7f5395c340c922097a1853059';
 
   useEffect(() => {
-    let map = mapRef.current;
+    // ฟังก์ชันโหลด Longdo Map API หากยังไม่ได้โหลด
+    const loadLongdoMapAPI = () => {
+      return new Promise((resolve, reject) => {
+        if (window.longdo) {
+          resolve(window.longdo);
+          return;
+        }
 
-    // เพิ่ม event listener เพื่อรอ Longdo Map API โหลด
-    const onLongdoLoad = () => {
-      console.log("Longdo Map API loaded.");
-      initializeMap();
+        // สร้าง script element เพื่อโหลด Longdo Map API
+        const script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.src = `https://api.longdo.com/map/?key=${LONGDO_API_KEY}`;
+        script.async = true;
+        script.defer = true;
+        
+        script.onload = () => {
+          console.log("Longdo Map API script loaded successfully");
+          if (window.longdo) {
+            resolve(window.longdo);
+          } else {
+            reject(new Error("Longdo Map API failed to initialize"));
+          }
+        };
+        
+        script.onerror = (error) => {
+          console.error("Error loading Longdo Map API:", error);
+          reject(new Error("Failed to load Longdo Map API"));
+        };
+        
+        document.head.appendChild(script);
+      });
     };
 
     // ฟังก์ชัน initialize/update แผนที่
-    const initializeMap = () => {
-      // ตรวจสอบว่า Longdo Map API โหลดแล้ว และมีค่าพิกัด
-      if (!mapContainerRef.current) {
-        setError("ไม่พบ container สำหรับแผนที่");
-        return;
-      }
-
-      if (!window.longdo) {
-        setError("Longdo Map API ยังไม่พร้อมใช้งาน");
-        return;
-      }
-
-      if (typeof latitude !== 'number' || typeof longitude !== 'number') {
-        setError("ไม่พบข้อมูลพิกัดที่ถูกต้อง");
-        return;
-      }
-
+    const initializeMap = async () => {
       try {
+        // ตรวจสอบว่ามี container
+        if (!mapContainerRef.current) {
+          setError("ไม่พบ container สำหรับแผนที่");
+          return;
+        }
+
+        // ตรวจสอบว่ามีค่าพิกัด
+        if (latitude === undefined || longitude === undefined || 
+            isNaN(parseFloat(latitude)) || isNaN(parseFloat(longitude))) {
+          setError("ไม่พบข้อมูลพิกัดที่ถูกต้อง");
+          return;
+        }
+
+        // แปลงค่าพิกัดให้เป็นตัวเลข
+        const lat = parseFloat(latitude);
+        const lon = parseFloat(longitude);
+
+        // โหลด Longdo Map API หากยังไม่ได้โหลด
+        await loadLongdoMapAPI();
+
+        if (!window.longdo) {
+          setError("ไม่สามารถโหลด Longdo Map API ได้");
+          return;
+        }
+
+        let map = mapRef.current;
+
         // ถ้ายังไม่มีการสร้างแผนที่
         if (!map) {
-          console.log("Initializing Longdo Map...");
+          console.log(`Initializing Longdo Map at lat: ${lat}, lon: ${lon}`);
           map = new window.longdo.Map({
             placeholder: mapContainerRef.current,
             language: 'th',
             zoom: 15,
-            location: { lon: longitude, lat: latitude },
+            location: { lon, lat },
             key: LONGDO_API_KEY
           });
           
@@ -54,8 +90,8 @@ const LongdoMapComponent = ({ latitude, longitude, markers = [], height = '400px
           setError(null);
         } else {
           // ถ้ามีแผนที่อยู่แล้ว เปลี่ยนตำแหน่ง
-          console.log(`Updating map location to lat: ${latitude}, lon: ${longitude}`);
-          map.location({ lon: longitude, lat: latitude });
+          console.log(`Updating map location to lat: ${lat}, lon: ${lon}`);
+          map.location({ lon, lat });
         }
         
         // ล้าง markers เดิมและเพิ่ม markers ใหม่
@@ -65,11 +101,14 @@ const LongdoMapComponent = ({ latitude, longitude, markers = [], height = '400px
           // ถ้ามี markers จากภายนอก ให้เพิ่มทั้งหมด
           if (markers && markers.length > 0) {
             markers.forEach(markerData => {
-              if (markerData && typeof markerData.latitude === 'number' && typeof markerData.longitude === 'number') {
-                console.log(`Adding marker at lat: ${markerData.latitude}, lon: ${markerData.longitude}`);
+              if (markerData && !isNaN(parseFloat(markerData.latitude)) && 
+                  !isNaN(parseFloat(markerData.longitude))) {
+                const markerLat = parseFloat(markerData.latitude);
+                const markerLon = parseFloat(markerData.longitude);
+                console.log(`Adding marker at lat: ${markerLat}, lon: ${markerLon}`);
                 const marker = new window.longdo.Marker({ 
-                  lon: markerData.longitude, 
-                  lat: markerData.latitude 
+                  lon: markerLon, 
+                  lat: markerLat 
                 }, {
                   title: markerData.title || '',
                   detail: markerData.detail || ''
@@ -78,8 +117,8 @@ const LongdoMapComponent = ({ latitude, longitude, markers = [], height = '400px
               }
             });
           } else {
-            console.log(`Adding current location marker at lat: ${latitude}, lon: ${longitude}`);
-            const marker = new window.longdo.Marker({ lon: longitude, lat: latitude });
+            console.log(`Adding current location marker at lat: ${lat}, lon: ${lon}`);
+            const marker = new window.longdo.Marker({ lon, lat });
             map.Overlays.add(marker);
           }
         }
@@ -89,17 +128,11 @@ const LongdoMapComponent = ({ latitude, longitude, markers = [], height = '400px
       }
     };
 
-    // ถ้า Longdo Map API โหลดแล้ว ก็ initialize เลย
-    if (window.longdo) {
-      onLongdoLoad();
-    } else {
-      // รอให้ API โหลดเสร็จ
-      window.addEventListener('load', onLongdoLoad);
-    }
+    // เรียกฟังก์ชันเริ่มต้น
+    initializeMap();
 
     // Cleanup function
     return () => {
-      window.removeEventListener('load', onLongdoLoad);
       if (mapRef.current) {
         mapRef.current.Overlays.clear();
       }
